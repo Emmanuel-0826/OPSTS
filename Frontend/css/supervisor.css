@@ -1,0 +1,356 @@
+/* ============================================================
+   css/supervisor.css — Supervisor Portal Specific Styles
+   OPSTS – Online Project Supervision & Tracking System
+============================================================ */
+
+/* ══════════════════════════════════════
+   DASHBOARD PAGE
+══════════════════════════════════════ */
+
+/* Student summary card on dashboard */
+.student-summary-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 14px var(--space-md);
+  border-bottom: 1px solid var(--gray-200);
+  transition: background var(--transition);
+  cursor: pointer;
+}
+
+.student-summary-card:last-child  { border-bottom: none; }
+.student-summary-card:hover        { background: var(--gray-50); }
+
+.student-summary-card .stu-info    { flex: 1; }
+.student-summary-card .stu-name    {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 2px;
+}
+.student-summary-card .stu-project {
+  font-size: var(--font-size-xs);
+  color: var(--gray-600);
+  margin-bottom: 4px;
+}
+.student-summary-card .stu-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.student-summary-card .stu-pct {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--primary);
+  min-width: 34px;
+}
+
+/* Pending review alert strip */
+.pending-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px var(--space-md);
+  background: var(--warning-light);
+  border-left: 4px solid var(--warning);
+  border-radius: var(--radius);
+  margin-bottom: var(--space-md);
+  font-size: var(--font-size-sm);
+}
+
+.pending-strip strong { color: var(--gray-900); }
+
+/* ══════════════════════════════════════
+   STUDENTS PAGE
+══════════════════════════════════════ */
+
+.student-card {
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: box-shadow var(--transition), border-color var(--transition);
+}
+
+.student-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary);
+}
+
+.student-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.student-card-header .stu-details { flex: 1; }
+.student-card-header .stu-name    {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 2px;
+}
+.student-card-header .stu-meta {
+  font-size: var(--font-size-xs);
+  color: var(--gray-600);
+}
+
+.student-card-body { padding: var(--space-md); }
+
+.student-card-body .project-title {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: var(--space-sm);
+  line-height: 1.4;
+}
+
+.student-card-progress {
+  margin-bottom: var(--space-sm);
+}
+
+.student-card-progress .progress-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-xs);
+  color: var(--gray-600);
+  margin-bottom: 4px;
+}
+
+.student-card-progress .progress-header strong {
+  color: var(--gray-900);
+  font-weight: 700;
+}
+
+.student-card-actions {
+  display: flex;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md) var(--space-md);
+  border-top: 1px solid var(--gray-200);
+  background: var(--gray-50);
+}
+
+/* Students grid */
+.students-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-lg);
+}
+
+/* ══════════════════════════════════════
+   REVIEW PAGE
+══════════════════════════════════════ */
+
+/* Filter toolbar */
+.review-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-size-sm);
+  color: var(--gray-700);
+}
+
+.filter-group select {
+  width: auto;
+  padding: 7px 12px;
+  font-size: var(--font-size-sm);
+}
+
+/* Submission review card */
+.review-card {
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-md);
+  overflow: hidden;
+  transition: box-shadow var(--transition);
+}
+
+.review-card:hover         { box-shadow: var(--shadow-md); }
+.review-card:last-child    { margin-bottom: 0; }
+
+.review-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 14px var(--space-md);
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.review-card-header .rc-info   { flex: 1; }
+.review-card-header .rc-title  {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 2px;
+}
+.review-card-header .rc-meta   {
+  font-size: var(--font-size-xs);
+  color: var(--gray-600);
+}
+
+.review-card-body {
+  padding: var(--space-md);
+}
+
+.review-card-body .file-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--gray-50);
+  border-radius: var(--radius);
+  margin-bottom: var(--space-md);
+  font-size: var(--font-size-sm);
+}
+
+.review-card-body .file-row .file-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+/* Feedback form inside review card */
+.feedback-form { margin-top: var(--space-md); }
+.feedback-form .form-group { margin-bottom: var(--space-sm); }
+
+.feedback-actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-top: var(--space-sm);
+}
+
+/* ══════════════════════════════════════
+   SCHEDULE PAGE
+══════════════════════════════════════ */
+
+.schedule-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-lg);
+}
+
+/* ══════════════════════════════════════
+   PROGRESS MONITOR PAGE
+══════════════════════════════════════ */
+
+.monitor-card {
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  margin-bottom: var(--space-md);
+  transition: box-shadow var(--transition);
+}
+
+.monitor-card:hover     { box-shadow: var(--shadow-md); }
+.monitor-card:last-child { margin-bottom: 0; }
+
+.monitor-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.monitor-card-header .mc-info  { flex: 1; }
+.monitor-card-header .mc-name  {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 2px;
+}
+.monitor-card-header .mc-project {
+  font-size: var(--font-size-xs);
+  color: var(--gray-600);
+}
+
+.monitor-chapters {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.monitor-chapter {
+  text-align: center;
+  padding: 8px 4px;
+  border-radius: var(--radius);
+  border: 1px solid var(--gray-200);
+  font-size: var(--font-size-xs);
+}
+
+.monitor-chapter .mc-label {
+  font-weight: 700;
+  color: var(--gray-800);
+  margin-bottom: 4px;
+}
+
+.monitor-chapter.approved  { background: var(--secondary-light); border-color: var(--secondary); }
+.monitor-chapter.review    { background: var(--warning-light);   border-color: var(--warning); }
+.monitor-chapter.revision  { background: var(--danger-light);    border-color: var(--danger); }
+.monitor-chapter.pending   { background: var(--gray-100);        border-color: var(--gray-300); }
+
+/* ══════════════════════════════════════
+   PROFILE PAGE
+══════════════════════════════════════ */
+
+.profile-avatar-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: var(--space-lg);
+  gap: 8px;
+}
+
+.profile-name {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+.profile-id {
+  font-size: var(--font-size-sm);
+  color: var(--gray-600);
+}
+
+.readonly-field {
+  background: var(--gray-100) !important;
+  color: var(--gray-600)  !important;
+  cursor: not-allowed;
+}
+
+/* ══════════════════════════════════════
+   NOTIFICATIONS PAGE
+══════════════════════════════════════ */
+
+.notif-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-md);
+}
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
+
+@media (max-width: 900px) {
+  .students-grid      { grid-template-columns: 1fr; }
+  .monitor-chapters   { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .monitor-chapters   { grid-template-columns: repeat(2, 1fr); }
+  .feedback-actions   { flex-direction: column; }
+}

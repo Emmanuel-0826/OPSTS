@@ -1,0 +1,295 @@
+/* ============================================================
+   css/student.css — Student Portal Specific Styles
+   OPSTS – Online Project Supervision & Tracking System
+============================================================ */
+
+/* ══════════════════════════════════════
+   DASHBOARD PAGE
+══════════════════════════════════════ */
+
+/* Project info card */
+.project-title {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.project-desc {
+  font-size: var(--font-size-sm);
+  color: var(--gray-600);
+  line-height: 1.6;
+  margin-bottom: var(--space-md);
+}
+
+.project-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  font-size: var(--font-size-xs);
+  color: var(--gray-600);
+  margin-top: var(--space-sm);
+}
+
+.progress-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--font-size-xs);
+  color: var(--gray-600);
+  margin-bottom: 6px;
+}
+
+.progress-row strong {
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+/* Supervisor strip on dashboard */
+.sup-strip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) 0 var(--space-md);
+}
+
+.sup-strip .sup-name {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 4px;
+}
+
+.sup-strip .sup-meta {
+  font-size: var(--font-size-xs);
+  color: var(--gray-600);
+  margin-bottom: 2px;
+}
+
+.sup-actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+/* ══════════════════════════════════════
+   SUBMISSIONS PAGE
+══════════════════════════════════════ */
+
+.chapter-status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.chapter-status-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px var(--space-md);
+  border-bottom: 1px solid var(--gray-200);
+  font-size: var(--font-size-sm);
+  transition: background var(--transition);
+}
+
+.chapter-status-item:last-child { border-bottom: none; }
+.chapter-status-item:hover { background: var(--gray-50); }
+
+.chapter-status-item .ch-name {
+  font-weight: 600;
+  color: var(--gray-900);
+  flex: 1;
+}
+
+.chapter-status-item .ch-versions {
+  font-size: var(--font-size-xs);
+  color: var(--gray-500);
+  margin-right: var(--space-md);
+}
+
+/* Submission history file row */
+.file-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: var(--gray-900);
+}
+
+.file-icon { font-size: 1.1rem; }
+
+/* ══════════════════════════════════════
+   FEEDBACK PAGE
+══════════════════════════════════════ */
+
+.feedback-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--gray-500);
+}
+
+.feedback-empty .fe-icon {
+  font-size: 2.8rem;
+  margin-bottom: 10px;
+}
+
+/* ══════════════════════════════════════
+   PROGRESS PAGE
+══════════════════════════════════════ */
+
+.completion-hero {
+  text-align: center;
+  margin-bottom: var(--space-xl);
+}
+
+.completion-percent {
+  font-size: 4rem;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.completion-label {
+  font-size: var(--font-size-sm);
+  color: var(--gray-600);
+  margin-top: 6px;
+}
+
+.chapter-progress-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.chapter-progress-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-md);
+  background: var(--gray-50);
+  border-radius: var(--radius);
+ }
+
+.chapter-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--font-size-sm);
+  margin-bottom: 6px;
+}
+
+.chapter-progress-header .ch-title { font-weight: 600; color: var(--gray-800); }
+.chapter-progress-header .ch-pct   { font-weight: 700; }
+
+.deadline-info {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--gray-200);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.deadline-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-sm);
+  color: var(--gray-600);
+}
+
+.deadline-row strong {
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+/* ══════════════════════════════════════
+   MEETINGS PAGE
+══════════════════════════════════════ */
+
+.meetings-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-lg);
+}
+
+.past-meeting-card {
+  opacity: 0.72;
+}
+
+.past-meeting-card .meeting-date-box {
+  background: var(--gray-100);
+}
+
+.past-meeting-card .mday { color: var(--gray-600); }
+.past-meeting-card .mmon { color: var(--gray-600); }
+
+/* ══════════════════════════════════════
+   NOTIFICATIONS PAGE
+══════════════════════════════════════ */
+
+.notif-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-md);
+}
+
+/* ══════════════════════════════════════
+   PROFILE PAGE
+══════════════════════════════════════ */
+
+.profile-avatar-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: var(--space-lg);
+  gap: 8px;
+}
+
+.profile-name {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+.profile-id {
+  font-size: var(--font-size-sm);
+  color: var(--gray-600);
+}
+
+.readonly-field {
+  background: var(--gray-100) !important;
+  color: var(--gray-600) !important;
+  cursor: not-allowed;
+}
+
+/* ══════════════════════════════════════
+   SHARED STUDENT COMPONENTS
+══════════════════════════════════════ */
+
+/* Topic submission badge (dashboard) */
+.topic-status-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-size-sm);
+  color: var(--gray-700);
+  margin-bottom: var(--space-sm);
+}
+
+/* Quick stats row inside cards */
+.quick-stats {
+  display: flex;
+  gap: var(--space-lg);
+  font-size: var(--font-size-xs);
+  color: var(--gray-600);
+  flex-wrap: wrap;
+}
+
+.quick-stat strong {
+  display: block;
+  font-size: var(--font-size-base);
+  font-weight: 800;
+  color: var(--gray-900);
+  margin-bottom: 2px;
+}

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OPSTS – Meetings</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
+  <link rel="stylesheet" href="../../css/dashboard.css" />
+  <link rel="stylesheet" href="../../css/student.css" />
+</head>
+<body>
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <img src="../../assets/images/opsts-logo.png" alt="OPSTS Logo" />
+      <div class="brand-text">OPSTS<small>Student Portal</small></div>
+    </div>
+    <div class="sidebar-user">
+      <div class="avatar" id="sideAvatar"></div>
+      <div>
+        <div class="u-name" id="sideUserName"></div>
+        <div class="u-role" id="sideUserMeta"></div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Main</div>
+      <div class="nav-item" data-page="dashboard.html">
+        <span class="nav-icon"><i class="fa-solid fa-house"></i></span><span class="nav-label">Dashboard</span>
+      </div>
+      <div class="nav-item" data-page="submissions.html">
+        <span class="nav-icon"><i class="fa-solid fa-upload"></i></span><span class="nav-label">My Submissions</span>
+      </div>
+      <div class="nav-item" data-page="feedback.html">
+        <span class="nav-icon"><i class="fa-solid fa-comments"></i></span><span class="nav-label">Feedback</span>
+        <span class="nav-badge hidden" id="fbBadge"></span>
+      </div>
+      <div class="nav-item" data-page="progress.html">
+        <span class="nav-icon"><i class="fa-solid fa-chart-line"></i></span><span class="nav-label">Progress</span>
+      </div>
+      <div class="nav-section">Communication</div>
+      <div class="nav-item active" data-page="meetings.html">
+        <span class="nav-icon"><i class="fa-solid fa-calendar-days"></i></span><span class="nav-label">Meetings</span>
+      </div>
+      <div class="nav-item" data-page="notifications.html">
+        <span class="nav-icon"><i class="fa-solid fa-bell"></i></span><span class="nav-label">Notifications</span>
+        <span class="nav-badge hidden" id="ntfBadge"></span>
+      </div>
+      <div class="nav-section">Account</div>
+      <div class="nav-item" data-page="profile.html">
+        <span class="nav-icon"><i class="fa-solid fa-circle-user"></i></span><span class="nav-label">My Profile</span>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn-logout" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Meetings <span>Scheduled supervision sessions</span></div>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="notifBtn"><i class="fa-solid fa-bell"></i><span class="dot hidden" id="ntfDot"></span></button>
+        <button class="icon-btn" id="profileBtn"><i class="fa-solid fa-circle-user"></i></button>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <div class="page-header">
+        <h2>Meetings</h2>
+        <p>View scheduled meetings and request new supervision sessions.</p>
+      </div>
+
+      <div class="meetings-toolbar">
+        <button class="btn btn-primary" id="requestMeetingBtn"><i class="fa-solid fa-calendar-plus"></i> Request a Meeting</button>
+      </div>
+
+      <div class="grid-2">
+
+        <!-- Upcoming -->
+        <div class="card">
+          <div class="card-header"><h3><i class="fa-solid fa-calendar-days"></i> Upcoming Meetings</h3></div>
+          <div class="card-body" id="upcomingMeetingsList"></div>
+        </div>
+
+        <!-- Past -->
+        <div class="card">
+          <div class="card-header"><h3><i class="fa-solid fa-clock-rotate-left"></i> Past Meetings</h3></div>
+          <div class="card-body" id="pastMeetingsList"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Request Meeting Modal -->
+<div class="modal-overlay" id="meetingModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-calendar-plus"></i> Request a Meeting</h3>
+      <button class="modal-close" id="closeMeetingModal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="meetingRequestForm" novalidate>
+        <div class="form-group">
+          <label for="mtgTopic">Meeting Topic</label>
+          <input type="text" id="mtgTopic" name="topic" placeholder="e.g. Chapter 4 discussion" required />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="mtgDate">Preferred Date</label>
+            <input type="date" id="mtgDate" name="date" required />
+          </div>
+          <div class="form-group">
+            <label for="mtgTime">Preferred Time</label>
+            <input type="time" id="mtgTime" name="time" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="mtgPlatform">Platform</label>
+          <select id="mtgPlatform" name="platform">
+            <option value="Zoom">Zoom</option>
+            <option value="Google Meet">Google Meet</option>
+            <option value="In-Person">In-Person</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="mtgLink">Meeting Link (optional)</label>
+          <input type="url" id="mtgLink" name="link" placeholder="https://zoom.us/j/…" />
+        </div>
+        <div class="form-group">
+          <label for="mtgNotes">Additional Notes</label>
+          <textarea id="mtgNotes" name="notes" placeholder="Any specific agenda items…"></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="cancelMeetingBtn">Cancel</button>
+      <button class="btn btn-primary" id="submitMeetingBtn"><i class="fa-solid fa-paper-plane"></i> Send Request</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="../../js/data.js"></script>
+<script src="../../js/utils.js"></script>
+<script src="../../js/api.js"></script>
+<script src="../../js/app.js"></script>
+<script src="../../js/notifications.js"></script>
+<script src="../../js/student.js"></script>
+</body>
+</html>

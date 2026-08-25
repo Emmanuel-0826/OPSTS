@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OPSTS – Login</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+</head>
+<body>
+
+<div class="auth-page">
+
+  <!-- ═══════════════════════════════
+       LEFT BANNER
+  ═══════════════════════════════ -->
+  <div class="auth-banner">
+    <img src="assets/images/logo.png" alt="OPSTS Logo" class="banner-logo" />
+    <h1 class="banner-title">OPSTS</h1>
+    <p class="banner-subtitle">
+      Online Project Supervision &amp; Tracking System —
+      bridging students and supervisors seamlessly.
+    </p>
+
+    <ul class="banner-features">
+      <li>
+        <span class="feature-icon"><i class="fa-solid fa-upload"></i></span>
+        Submit project chapters &amp; revisions
+      </li>
+      <li>
+        <span class="feature-icon"><i class="fa-solid fa-comments"></i></span>
+        Receive real-time supervisor feedback
+      </li>
+      <li>
+        <span class="feature-icon"><i class="fa-solid fa-chart-bar"></i></span>
+        Track project milestones &amp; progress
+      </li>
+      <li>
+        <span class="feature-icon"><i class="fa-solid fa-calendar-days"></i></span>
+        Schedule &amp; manage supervision meetings
+      </li>
+      <li>
+        <span class="feature-icon"><i class="fa-solid fa-bell"></i></span>
+        Get deadline &amp; submission notifications
+      </li>
+    </ul>
+  </div>
+
+  <!-- ═══════════════════════════════
+       RIGHT AUTH PANEL
+  ═══════════════════════════════ -->
+  <div class="auth-panel">
+    <div class="auth-card">
+
+      <div class="auth-header">
+        <h2>Welcome Back</h2>
+        <p>Sign in to access your portal or create a new account.</p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="auth-tabs">
+        <div class="auth-tab active" id="tab-login">Sign In</div>
+        <div class="auth-tab"        id="tab-register">Register</div>
+      </div>
+
+      <!-- Alert -->
+      <div class="auth-alert" id="authAlert"></div>
+
+      <!-- ═══════════════════════
+           SIGN IN FORM
+      ═══════════════════════ -->
+      <form class="auth-form active" id="loginForm" novalidate>
+
+        <div class="form-group">
+          <label>Select Your Role</label>
+          <div class="role-selector" id="loginRoleSelector">
+            <div class="role-option selected" data-role="student">
+              <span class="role-icon"><i class="fa-solid fa-user-graduate"></i></span>
+              <span class="role-label">Student</span>
+            </div>
+            <div class="role-option" data-role="supervisor">
+              <span class="role-icon"><i class="fa-solid fa-chalkboard-user"></i></span>
+              <span class="role-label">Supervisor</span>
+            </div>
+            <div class="role-option" data-role="admin">
+              <span class="role-icon"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+              <span class="role-label">Admin</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="loginEmail">Email Address</label>
+          <input
+            type="email"
+            id="loginEmail"
+            name="email"
+            placeholder="you@gmail.com"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <input
+            type="password"
+            id="loginPassword"
+            name="password"
+            placeholder="Enter your password"
+            required
+          />
+        </div>
+
+        <div class="form-meta">
+          <label>
+            <input type="checkbox" id="rememberMe" />
+            Remember me
+          </label>
+          <a href="#" id="forgotLink">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg w-full">
+          <i class="fa-solid fa-right-to-bracket"></i> Sign In
+        </button>
+
+      </form>
+
+      <!-- ═══════════════════════
+           REGISTER FORM
+      ═══════════════════════ -->
+      <form class="auth-form" id="registerForm" novalidate>
+
+        <div class="form-group">
+          <label>Register As</label>
+          <div class="role-selector" id="registerRoleSelector">
+            <div class="role-option selected" data-role="student">
+              <span class="role-icon"><i class="fa-solid fa-user-graduate"></i></span>
+              <span class="role-label">Student</span>
+            </div>
+            <div class="role-option" data-role="supervisor">
+              <span class="role-icon"><i class="fa-solid fa-chalkboard-user"></i></span>
+              <span class="role-label">Supervisor</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="regFirstName">First Name</label>
+            <input type="text" id="regFirstName" name="firstName" placeholder="John" required />
+          </div>
+          <div class="form-group">
+            <label for="regLastName">Last Name</label>
+            <input type="text" id="regLastName" name="lastName" placeholder="Doe" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="regEmail">Email</label>
+          <input type="email" id="regEmail" name="email" placeholder="you@gmail.com" required />
+        </div>
+
+        <div class="form-group">
+          <label for="regId">Student / Staff ID</label>
+          <input type="text" id="regId" name="staffId" placeholder="e.g. 2425430001" required />
+        </div>
+
+        <div class="form-group">
+          <label for="regDept">Department</label>
+          <select id="regDept" name="department" required>
+            <option value="">Select department…</option>
+            <option value="cs">Computer Science</option>
+            <option value="it">Information Technology</option>
+            <option value="ce">Computer Engineering</option>
+            <option value="se">Software Engineering</option>
+            <option value="cy">Cybersecurity</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="regPassword">Password</label>
+          <input type="password" id="regPassword" name="password" placeholder="Create a password" required />
+        </div>
+
+        <div class="form-group">
+          <label for="regConfirm">Confirm Password</label>
+          <input type="password" id="regConfirm" name="confirm" placeholder="Repeat your password" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg w-full">
+          <i class="fa-solid fa-user-plus"></i> Create Account
+        </button>
+
+      </form>
+
+      <div class="auth-footer">
+        &copy; 2025 OPSTS &mdash; University Project Supervision Portal
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/notifications.js"></script>
+</body>
+</html>

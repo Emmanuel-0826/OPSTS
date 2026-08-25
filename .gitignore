@@ -1,0 +1,21 @@
+# ── Dependencies ─────────────────────────────────────────
+node_modules/
+
+# ── Secrets ──────────────────────────────────────────────
+# .env holds the JWT signing secret and database password.
+# Only .env.example (with blank values) belongs in the repo.
+.env
+.env.local
+*.env
+!.env.example
+
+# ── Uploaded student work ────────────────────────────────
+# Submitted chapters are user data, not source.
+Backend/uploads/*
+!Backend/uploads/.gitkeep
+
+# ── Logs & OS noise ──────────────────────────────────────
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OPSTS – Manage Users</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
+  <link rel="stylesheet" href="../../css/dashboard.css" />
+  <link rel="stylesheet" href="../../css/admin.css" />
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <img src="../../assets/images/opsts-logo.png" alt="OPSTS Logo" />
+      <div class="brand-text">OPSTS<small>Admin Portal</small></div>
+    </div>
+    <div class="sidebar-user">
+      <div class="avatar" id="sideAvatar"></div>
+      <div><div class="u-name" id="sideUserName"></div><div class="u-role" id="sideUserMeta"></div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Management</div>
+      <div class="nav-item" data-page="dashboard.html"><span class="nav-icon"><i class="fa-solid fa-house"></i></span><span class="nav-label">Dashboard</span></div>
+      <div class="nav-item active" data-page="users.html"><span class="nav-icon"><i class="fa-solid fa-users"></i></span><span class="nav-label">Manage Users</span></div>
+      <div class="nav-item" data-page="projects.html"><span class="nav-icon"><i class="fa-solid fa-folder-open"></i></span><span class="nav-label">Manage Projects</span></div>
+      <div class="nav-item" data-page="assign.html"><span class="nav-icon"><i class="fa-solid fa-link"></i></span><span class="nav-label">Assign Supervisors</span></div>
+      <div class="nav-section">Reports</div>
+      <div class="nav-item" data-page="reports.html"><span class="nav-icon"><i class="fa-solid fa-chart-pie"></i></span><span class="nav-label">Reports</span></div>
+      <div class="nav-section">Account</div>
+      <div class="nav-item" data-page="notifications.html"><span class="nav-icon"><i class="fa-solid fa-bell"></i></span><span class="nav-label">Notifications</span><span class="nav-badge hidden" id="ntfBadge"></span></div>
+      <div class="nav-item" data-page="profile.html"><span class="nav-icon"><i class="fa-solid fa-circle-user"></i></span><span class="nav-label">My Profile</span></div>
+    </nav>
+    <div class="sidebar-footer"><button class="btn-logout" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button></div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left"><div class="topbar-title">Manage Users <span>All system accounts</span></div></div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="notifBtn"><i class="fa-solid fa-bell"></i><span class="dot hidden" id="ntfDot"></span></button>
+        <button class="icon-btn" id="profileBtn"><i class="fa-solid fa-circle-user"></i></button>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <div class="page-header">
+        <h2>Manage Users</h2>
+        <p>View, search, and manage all student and supervisor accounts.</p>
+      </div>
+
+      <div class="users-toolbar">
+        <div class="users-search">
+          <input type="text" id="userSearch" placeholder="Search by name or email…" />
+        </div>
+        <div class="role-filter-tabs">
+          <div class="role-filter-tab active" data-role="all">All</div>
+          <div class="role-filter-tab" data-role="student">Students</div>
+          <div class="role-filter-tab" data-role="supervisor">Supervisors</div>
+        </div>
+        <button class="btn btn-primary" id="addUserBtn"><i class="fa-solid fa-plus"></i> Add User</button>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Role</th>
+                <th>ID / Index</th>
+                <th>Department</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add / Edit User Modal -->
+<div class="modal-overlay" id="userModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="userModalTitle"><i class="fa-solid fa-user-plus"></i> Add New User</h3>
+      <button class="modal-close" id="closeUserModal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="userForm" novalidate>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="uFirstName">First Name</label>
+            <input type="text" id="uFirstName" name="firstName" placeholder="First name" required />
+          </div>
+          <div class="form-group">
+            <label for="uLastName">Last Name</label>
+            <input type="text" id="uLastName" name="lastName" placeholder="Last name" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="uEmail">Email Address</label>
+          <input type="email" id="uEmail" name="email" placeholder="user@university.edu.gh" required />
+        </div>
+        <div class="form-group">
+          <label for="uRole">Role</label>
+          <select id="uRole" name="role" required>
+            <option value="student">Student</option>
+            <option value="supervisor">Supervisor</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="uId">Student / Staff ID</label>
+          <input type="text" id="uId" name="userId" placeholder="e.g. UG/CS/2021/001" required />
+        </div>
+        <div class="form-group">
+          <label for="uDept">Department</label>
+          <select id="uDept" name="department" required>
+            <option value="">Select department…</option>
+            <option value="Computer Science">Computer Science</option>
+            <option value="Information Technology">Information Technology</option>
+            <option value="Computer Engineering">Computer Engineering</option>
+            <option value="Software Engineering">Software Engineering</option>
+            <option value="Cybersecurity">Cybersecurity</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="uPassword">Password (optional)</label>
+          <input type="text" id="uPassword" name="password" placeholder="Leave blank to auto-generate" />
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="cancelUserBtn">Cancel</button>
+      <button class="btn btn-primary" id="submitUserBtn"><i class="fa-solid fa-floppy-disk"></i> Save User</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="../../js/data.js"></script>
+<script src="../../js/utils.js"></script>
+<script src="../../js/api.js"></script>
+<script src="../../js/app.js"></script>
+<script src="../../js/notifications.js"></script>
+<script src="../../js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OPSTS – Admin Profile</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
+  <link rel="stylesheet" href="../../css/dashboard.css" />
+  <link rel="stylesheet" href="../../css/admin.css" />
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <img src="../../assets/images/opsts-logo.png" alt="OPSTS Logo" />
+      <div class="brand-text">OPSTS<small>Admin Portal</small></div>
+    </div>
+    <div class="sidebar-user">
+      <div class="avatar" id="sideAvatar"></div>
+      <div><div class="u-name" id="sideUserName"></div><div class="u-role" id="sideUserMeta"></div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Management</div>
+      <div class="nav-item" data-page="dashboard.html"><span class="nav-icon"><i class="fa-solid fa-house"></i></span><span class="nav-label">Dashboard</span></div>
+      <div class="nav-item" data-page="users.html"><span class="nav-icon"><i class="fa-solid fa-users"></i></span><span class="nav-label">Manage Users</span></div>
+      <div class="nav-item" data-page="projects.html"><span class="nav-icon"><i class="fa-solid fa-folder-open"></i></span><span class="nav-label">Manage Projects</span></div>
+      <div class="nav-item" data-page="assign.html"><span class="nav-icon"><i class="fa-solid fa-link"></i></span><span class="nav-label">Assign Supervisors</span></div>
+      <div class="nav-section">Reports</div>
+      <div class="nav-item" data-page="reports.html"><span class="nav-icon"><i class="fa-solid fa-chart-pie"></i></span><span class="nav-label">Reports</span></div>
+      <div class="nav-section">Account</div>
+      <div class="nav-item" data-page="notifications.html"><span class="nav-icon"><i class="fa-solid fa-bell"></i></span><span class="nav-label">Notifications</span><span class="nav-badge hidden" id="ntfBadge"></span></div>
+      <div class="nav-item active" data-page="profile.html"><span class="nav-icon"><i class="fa-solid fa-circle-user"></i></span><span class="nav-label">My Profile</span></div>
+    </nav>
+    <div class="sidebar-footer"><button class="btn-logout" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button></div>
+  </aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left"><div class="topbar-title">My Profile <span>Account settings</span></div></div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="notifBtn"><i class="fa-solid fa-bell"></i><span class="dot hidden" id="ntfDot"></span></button>
+        <button class="icon-btn" id="profileBtn"><i class="fa-solid fa-circle-user"></i></button>
+      </div>
+    </div>
+    <div class="page-content">
+      <div class="page-header">
+        <h2>My Profile</h2>
+        <p>Manage your admin account information.</p>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><h3><i class="fa-solid fa-circle-user"></i> Personal Information</h3></div>
+          <div class="card-body">
+            <div class="profile-avatar-wrap">
+              <div class="avatar" id="profileAvatar" style="width:72px;height:72px;font-size:1.6rem;"></div>
+              <div class="profile-name" id="profileName"></div>
+              <div class="profile-id"   id="profileId"></div>
+            </div>
+            <form id="profileForm" novalidate>
+              <div class="form-group">
+                <label for="profileFullName">Full Name</label>
+                <input type="text" id="profileFullName" name="fullName" />
+              </div>
+              <div class="form-group">
+                <label for="profileEmail">Email Address</label>
+                <input type="email" id="profileEmail" name="email" />
+              </div>
+              <div class="form-group">
+                <label for="profileStaffId">Staff ID</label>
+                <input type="text" id="profileStaffId" name="staffId" class="readonly-field" readonly />
+              </div>
+              <div class="form-group">
+                <label for="profileDept">Department</label>
+                <input type="text" id="profileDept" name="department" class="readonly-field" readonly />
+              </div>
+              <button type="button" class="btn btn-primary" id="saveProfileBtn"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+            </form>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3><i class="fa-solid fa-lock"></i> Change Password</h3></div>
+          <div class="card-body">
+            <form id="passwordForm" novalidate>
+              <div class="form-group">
+                <label for="currentPassword">Current Password</label>
+                <input type="password" id="currentPassword" placeholder="Enter current password" />
+              </div>
+              <div class="form-group">
+                <label for="newPassword">New Password</label>
+                <input type="password" id="newPassword" placeholder="Enter new password" />
+              </div>
+              <div class="form-group">
+                <label for="confirmPassword">Confirm New Password</label>
+                <input type="password" id="confirmPassword" placeholder="Repeat new password" />
+              </div>
+              <button type="button" class="btn btn-primary" id="changePasswordBtn"><i class="fa-solid fa-lock"></i> Update Password</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+<script src="../../js/data.js"></script>
+<script src="../../js/utils.js"></script>
+<script src="../../js/api.js"></script>
+<script src="../../js/app.js"></script>
+<script src="../../js/notifications.js"></script>
+<script src="../../js/admin.js"></script>
+</body>
+</html>

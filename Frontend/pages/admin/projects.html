@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OPSTS – Manage Projects</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
+  <link rel="stylesheet" href="../../css/dashboard.css" />
+  <link rel="stylesheet" href="../../css/admin.css" />
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <img src="../../assets/images/opsts-logo.png" alt="OPSTS Logo" />
+      <div class="brand-text">OPSTS<small>Admin Portal</small></div>
+    </div>
+    <div class="sidebar-user">
+      <div class="avatar" id="sideAvatar"></div>
+      <div><div class="u-name" id="sideUserName"></div><div class="u-role" id="sideUserMeta"></div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Management</div>
+      <div class="nav-item" data-page="dashboard.html"><span class="nav-icon"><i class="fa-solid fa-house"></i></span><span class="nav-label">Dashboard</span></div>
+      <div class="nav-item" data-page="users.html"><span class="nav-icon"><i class="fa-solid fa-users"></i></span><span class="nav-label">Manage Users</span></div>
+      <div class="nav-item active" data-page="projects.html"><span class="nav-icon"><i class="fa-solid fa-folder-open"></i></span><span class="nav-label">Manage Projects</span></div>
+      <div class="nav-item" data-page="assign.html"><span class="nav-icon"><i class="fa-solid fa-link"></i></span><span class="nav-label">Assign Supervisors</span></div>
+      <div class="nav-section">Reports</div>
+      <div class="nav-item" data-page="reports.html"><span class="nav-icon"><i class="fa-solid fa-chart-pie"></i></span><span class="nav-label">Reports</span></div>
+      <div class="nav-section">Account</div>
+      <div class="nav-item" data-page="notifications.html"><span class="nav-icon"><i class="fa-solid fa-bell"></i></span><span class="nav-label">Notifications</span><span class="nav-badge hidden" id="ntfBadge"></span></div>
+      <div class="nav-item" data-page="profile.html"><span class="nav-icon"><i class="fa-solid fa-circle-user"></i></span><span class="nav-label">My Profile</span></div>
+    </nav>
+    <div class="sidebar-footer"><button class="btn-logout" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button></div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left"><div class="topbar-title">Manage Projects <span>All student projects</span></div></div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="notifBtn"><i class="fa-solid fa-bell"></i><span class="dot hidden" id="ntfDot"></span></button>
+        <button class="icon-btn" id="profileBtn"><i class="fa-solid fa-circle-user"></i></button>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <div class="page-header">
+        <h2>Manage Projects</h2>
+        <p>View and manage all student projects across the system.</p>
+      </div>
+
+      <div class="projects-toolbar">
+        <div class="users-search">
+          <input type="text" id="projectSearch" placeholder="Search by title or student…" />
+        </div>
+        <div class="role-filter-tabs">
+          <div class="role-filter-tab active" data-status="all">All</div>
+          <div class="role-filter-tab" data-status="In Progress">In Progress</div>
+          <div class="role-filter-tab" data-status="Pending">Pending</div>
+          <div class="role-filter-tab" data-status="Completed">Completed</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Project Title</th>
+                <th>Student</th>
+                <th>Supervisor</th>
+                <th>Start Date</th>
+                <th>Progress</th>
+                <th>Deadline</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="projectsTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Project Detail Modal -->
+<div class="modal-overlay" id="projectDetailModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-folder-open"></i> Project Details</h3>
+      <button class="modal-close" id="closeProjectDetailModal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>Title</label><input type="text" id="pdTitle" readonly class="readonly-field" /></div>
+      <div class="form-group"><label>Topic</label><input type="text" id="pdTopic" readonly class="readonly-field" /></div>
+      <div class="form-row">
+        <div class="form-group"><label>Student</label><input type="text" id="pdStudent" readonly class="readonly-field" /></div>
+        <div class="form-group"><label>Supervisor</label><input type="text" id="pdSupervisor" readonly class="readonly-field" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Start Date</label><input type="date" id="pdStartDate" /></div>
+        <div class="form-group"><label>Deadline</label><input type="date" id="pdDeadline" /></div>
+      </div>
+      <div class="form-group"><label>Progress</label><input type="text" id="pdProgress" readonly class="readonly-field" /></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="cancelProjectDetailBtn">Close</button>
+      <button class="btn btn-primary" id="saveProjectDatesBtn"><i class="fa-solid fa-floppy-disk"></i> Save Dates</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="../../js/data.js"></script>
+<script src="../../js/utils.js"></script>
+<script src="../../js/api.js"></script>
+<script src="../../js/app.js"></script>
+<script src="../../js/notifications.js"></script>
+<script src="../../js/admin.js"></script>
+</body>
+</html>

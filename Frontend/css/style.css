@@ -1,0 +1,332 @@
+/* ============================================================
+   css/style.css — Global CSS Variables, Reset & Base Styles
+   OPSTS – Online Project Supervision & Tracking System
+============================================================ */
+
+/* ── Reset ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── CSS Variables ── */
+:root {
+  /* Brand Colors */
+  --primary:         #1a73e8;
+  --primary-dark:    #1558b0;
+  --primary-light:   #e8f0fe;
+  --secondary:       #34a853;
+  --secondary-light: #e6f4ea;
+  --warning:         #fbbc04;
+  --warning-light:   #fff8e1;
+  --danger:          #ea4335;
+  --danger-light:    #fce8e6;
+
+  /* Neutrals */
+  --white:      #ffffff;
+  --gray-50:    #f8f9fa;
+  --gray-100:   #f1f3f4;
+  --gray-200:   #e8eaed;
+  --gray-300:   #dadce0;
+  --gray-400:   #bdc1c6;
+  --gray-500:   #9aa0a6;
+  --gray-600:   #80868b;
+  --gray-700:   #5f6368;
+  --gray-800:   #3c4043;
+  --gray-900:   #202124;
+
+  /* Sidebar */
+  --sidebar-bg:      #0d2137;
+  --sidebar-hover:   rgba(255, 255, 255, 0.07);
+  --sidebar-active:  rgba(26, 115, 232, 0.25);
+  --sidebar-border:  rgba(255, 255, 255, 0.08);
+  --sidebar-text:    rgba(255, 255, 255, 0.75);
+  --sidebar-width:   250px;
+
+  /* Typography */
+  --font: 'Segoe UI', Roboto, Arial, sans-serif;
+  --font-size-xs:  0.72rem;
+  --font-size-sm:  0.82rem;
+  --font-size-md:  0.92rem;
+  --font-size-base: 1rem;
+  --font-size-lg:  1.1rem;
+  --font-size-xl:  1.4rem;
+  --font-size-2xl: 1.7rem;
+
+  /* Spacing */
+  --space-xs:  4px;
+  --space-sm:  8px;
+  --space-md:  16px;
+  --space-lg:  24px;
+  --space-xl:  32px;
+  --space-2xl: 48px;
+
+  /* Borders & Radius */
+  --radius-sm: 6px;
+  --radius:    8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
+
+  /* Transitions */
+  --transition: 0.22s ease;
+  --transition-slow: 0.4s ease;
+}
+
+/* ── Base Styles ── */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font);
+  font-size: var(--font-size-base);
+  color: var(--gray-900);
+  background: var(--gray-100);
+  min-height: 100vh;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Typography ── */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--gray-900);
+}
+
+p { color: var(--gray-700); }
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+a:hover { text-decoration: underline; }
+
+small { font-size: var(--font-size-sm); }
+
+/* ── Form Elements ── */
+input, select, textarea, button {
+  font-family: var(--font);
+  font-size: var(--font-size-base);
+  outline: none;
+}
+
+button { cursor: pointer; border: none; }
+
+input, select, textarea {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius);
+  color: var(--gray-900);
+  background: var(--gray-50);
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--primary);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+}
+
+textarea { resize: vertical; min-height: 90px; }
+
+/* ── Utility: Flex ── */
+.flex         { display: flex; }
+.flex-col     { display: flex; flex-direction: column; }
+.flex-center  { display: flex; align-items: center; justify-content: center; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-xs  { gap: var(--space-xs); }
+.gap-sm  { gap: var(--space-sm); }
+.gap-md  { gap: var(--space-md); }
+.gap-lg  { gap: var(--space-lg); }
+.flex-1  { flex: 1; }
+.flex-shrink-0 { flex-shrink: 0; }
+
+/* ── Utility: Text ── */
+.text-xs     { font-size: var(--font-size-xs); }
+.text-sm     { font-size: var(--font-size-sm); }
+.text-md     { font-size: var(--font-size-md); }
+.text-lg     { font-size: var(--font-size-lg); }
+.text-xl     { font-size: var(--font-size-xl); }
+.text-bold   { font-weight: 700; }
+.text-muted  { color: var(--gray-600); }
+.text-center { text-align: center; }
+.text-primary  { color: var(--primary); }
+.text-success  { color: var(--secondary); }
+.text-danger   { color: var(--danger); }
+.text-warning  { color: var(--warning); }
+
+/* ── Utility: Spacing ── */
+.mt-sm { margin-top: var(--space-sm); }
+.mt-md { margin-top: var(--space-md); }
+.mt-lg { margin-top: var(--space-lg); }
+.mb-sm { margin-bottom: var(--space-sm); }
+.mb-md { margin-bottom: var(--space-md); }
+.mb-lg { margin-bottom: var(--space-lg); }
+
+/* ── Utility: Display ── */
+.hidden { display: none !important; }
+.w-full { width: 100%; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge-success   { background: var(--secondary-light); color: #137333; }
+.badge-primary   { background: var(--primary-light);   color: var(--primary); }
+.badge-warning   { background: var(--warning-light);   color: #b45309; }
+.badge-danger    { background: var(--danger-light);    color: #c5221f; }
+.badge-secondary { background: var(--gray-100);        color: var(--gray-700); }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: var(--radius);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-sm { padding: 5px 12px; font-size: var(--font-size-xs); }
+.btn-lg { padding: 12px 24px; font-size: var(--font-size-base); }
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--white);
+  border: none;
+  box-shadow: var(--shadow-sm);
+}
+.btn-primary:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--primary);
+  border: 1.5px solid var(--primary);
+}
+.btn-outline:hover {
+  background: var(--primary-light);
+}
+
+.btn-success {
+  background: var(--secondary);
+  color: var(--white);
+  border: none;
+}
+.btn-success:hover { background: #2d9248; transform: translateY(-1px); }
+
+.btn-danger {
+  background: var(--danger);
+  color: var(--white);
+  border: none;
+}
+.btn-danger:hover { background: #c5221f; transform: translateY(-1px); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--gray-700);
+  border: 1.5px solid var(--gray-200);
+}
+.btn-ghost:hover { background: var(--gray-100); }
+
+/* ── Avatar ── */
+.avatar {
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+  font-weight: 700;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+/* ── Progress Bar ── */
+.progress-track {
+  width: 100%;
+  height: 8px;
+  background: var(--gray-200);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.6s ease;
+}
+.progress-fill.green  { background: var(--secondary); }
+.progress-fill.blue   { background: var(--primary); }
+.progress-fill.yellow { background: var(--warning); }
+.progress-fill.gray   { background: var(--gray-400); }
+
+/* ── Divider ── */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--gray-400);
+  font-size: var(--font-size-sm);
+}
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--gray-200);
+}
+
+/* ── Empty State ── */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--gray-600);
+}
+.empty-state .es-icon { font-size: 2.8rem; margin-bottom: 12px; }
+.empty-state p { font-size: var(--font-size-md); }
+
+/* ── Font Awesome global sizing fixes ── */
+.badge i         { font-size: 0.7rem; }
+.notif-icon i    { font-size: 1.1rem; }
+.notif-drop-icon i,
+.ntf-drop-icon i { font-size: 1rem; }
+.activity-icon i { font-size: 1rem; }
+.btn i           { font-size: 0.85rem; }
+.sidebar-footer .btn-logout i { font-size: 0.85rem; }
+.upload-zone i,
+.import-zone i   { font-size: 2rem; display: block; margin-bottom: 8px; }
+.stat-icon i     { font-size: 1.4rem; }
+.feature-icon i  { font-size: 1rem; color: var(--white); }
+.empty-state i   { font-size: 2.8rem; margin-bottom: 12px; display: block; color: var(--gray-400); }
+.meeting-info i,
+.project-meta i,
+.deadline-row i  { font-size: 0.85rem; }
+.icon-btn i      { font-size: 0.95rem; }
+.rc-icon i       { font-size: 2.4rem; }
+.dept-stat-icon i { font-size: 1.4rem; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  :root { --sidebar-width: 0px; }
+}
