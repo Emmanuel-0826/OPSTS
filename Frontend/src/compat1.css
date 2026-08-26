@@ -1,0 +1,423 @@
+/* ============================================================
+   src/compat.css — legacy class names used by pages/ and js/
+   OPSTS – GCTU
+
+   The 21 portal pages and the js/*.js renderers were written
+   against one set of class names (.sidebar, .topbar, .stat-card,
+   .card-header). components.css implements a different set
+   (.app-nav, .app-topbar, .card-head) — the one pages/_kit.html
+   demonstrates. Only .app-shell, .card, .btn, .nav-item,
+   .nav-section and .avatar overlap, which is why the pages render
+   as a half-styled grid.
+
+   This file defines the names the pages actually use, in the same
+   tokens as everything else. Nothing here is a hack; it is the
+   missing half of the component layer.
+
+   Long term: migrate the markup to the _kit.html vocabulary and
+   delete this file. Until then it is load-bearing.
+============================================================ */
+
+/* ── Shell ───────────────────────────────────────────────── */
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-16) var(--space-12);
+  background: var(--nav-bg);
+  border-right: 1px solid var(--nav-line);
+  z-index: var(--z-nav);
+}
+@media (max-width: 1024px) {
+  .sidebar { display: none; }
+}
+
+.main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-content {
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding: var(--space-24);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-24);
+}
+@media (max-width: 640px) {
+  .page-content { padding: var(--space-16) var(--space-16) var(--space-80); }
+}
+
+/* ── Top bar ─────────────────────────────────────────────── */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  height: var(--topbar-height);
+  padding-inline: var(--space-24);
+  background: var(--surface);
+  border-bottom: 1px solid transparent;
+  transition: background-color var(--dur-state) var(--ease-standard),
+              border-color var(--dur-state) var(--ease-standard);
+}
+.topbar[data-scrolled="true"] {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  border-bottom-color: var(--glass-line);
+  box-shadow: var(--glass-inset);
+}
+@media (max-width: 640px) {
+  .topbar { padding-inline: var(--space-16); }
+}
+
+.topbar-left { min-width: 0; }
+
+.topbar-title {
+  font-family: var(--ff-display);
+  font-size: var(--fs-20);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-heading);
+  line-height: var(--lh-heading);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* The "Welcome back!" span rides along inside the h-string; it is
+   not a heading and must not read as one. */
+.topbar-title span {
+  display: inline-block;
+  margin-left: var(--space-8);
+  font-family: var(--ff-body);
+  font-size: var(--fs-14);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-body);
+  color: var(--text-subtle);
+}
+
+.topbar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+/* ── Sidebar brand / user / footer ───────────────────────── */
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-8) var(--space-16);
+  border-bottom: 1px solid var(--nav-line);
+}
+.sidebar-brand img { width: 2rem; height: 2rem; object-fit: contain; flex: none; }
+
+.brand-text {
+  font-family: var(--ff-display);
+  font-size: var(--fs-16);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-heading);
+  line-height: 1.1;
+  color: var(--nav-text-active);
+}
+.brand-text small {
+  display: block;
+  font-family: var(--ff-body);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--ls-body);
+  color: var(--text-subtlest);
+}
+
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-12) var(--space-8);
+  min-width: 0;
+}
+.sidebar-user > div { min-width: 0; }
+
+.u-name {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-semibold);
+  color: var(--nav-text-active);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.u-role {
+  font-size: var(--fs-12);
+  color: var(--text-subtlest);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* .sidebar is already the flex column; the inner <nav> must not
+   introduce a second one or the nav items stop stretching. */
+.sidebar-nav { display: contents; }
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: var(--space-12);
+  border-top: 1px solid var(--nav-line);
+}
+
+.btn-logout {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  width: 100%;
+  min-height: var(--hit-target);
+  padding: var(--space-8) var(--space-12);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--nav-text);
+  font: inherit;
+  font-size: var(--fs-14);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-standard),
+              color var(--dur-fast) var(--ease-standard);
+}
+.btn-logout:hover { background: var(--risk-bg); color: var(--risk-text); }
+
+/* ── Nav item internals ──────────────────────────────────── */
+
+.nav-icon {
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  flex: none;
+  font-size: var(--fs-14);
+}
+.nav-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nav-badge {
+  margin-left: auto;
+  flex: none;
+  min-width: 1.25rem;
+  padding: 0 var(--space-6);
+  border-radius: var(--radius-pill);
+  background: var(--risk-bold);
+  color: var(--color-inverse, #fff);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25rem;
+  text-align: center;
+}
+.nav-badge.hidden { display: none; }
+
+/* ── Icon button + notification dot ──────────────────────── */
+
+.icon-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--hit-target);
+  height: var(--hit-target);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-subtle);
+  font-size: var(--fs-16);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-standard),
+              color var(--dur-fast) var(--ease-standard);
+}
+.icon-btn:hover { background: var(--surface-hovered); color: var(--text); }
+.icon-btn .dot {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--risk-bold);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+.icon-btn .dot.hidden { display: none; }
+
+/* ── Card internals ──────────────────────────────────────── */
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  margin-bottom: var(--space-16);
+}
+.card-header h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-family: var(--ff-display);
+  font-size: var(--fs-16);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-heading);
+}
+.card-header h2 i { color: var(--text-subtlest); font-size: var(--fs-14); }
+
+.card-body { min-width: 0; }
+
+.btn-outline {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--line);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── Stat cards ──────────────────────────────────────────── */
+
+/* The pages wrap these in Tailwind grid utilities; this only
+   styles the card itself. */
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  padding: var(--space-16);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-icon {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: none;
+  border-radius: var(--radius-md);
+  font-size: var(--fs-16);
+}
+.tint-blue  { background: var(--info-bg); color: var(--info-text); }
+.tint-amber { background: var(--warn-bg); color: var(--warn-text); }
+.tint-green { background: var(--ok-bg);   color: var(--ok-text); }
+.tint-rose  { background: var(--risk-bg); color: var(--risk-text); }
+
+.stat-info { min-width: 0; }
+.stat-val {
+  font-family: var(--ff-display);
+  font-size: var(--fs-31);
+  font-weight: var(--fw-bold);
+  line-height: 1.05;
+  letter-spacing: var(--ls-display);
+  font-variant-numeric: tabular-nums;
+}
+.stat-label {
+  font-size: var(--fs-12);
+  font-weight: var(--fw-medium);
+  color: var(--text-subtle);
+}
+
+/* ── Forms, modals, toasts ───────────────────────────────── */
+
+.form-group { display: flex; flex-direction: column; gap: var(--space-6); }
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-16);
+}
+
+/* Closed by default. The state class is .open — that is what
+   openModal/closeModal, the backdrop-click handler, and a11y.js
+   (Escape, focus trap, MutationObserver) all toggle. Styling this
+   visible by default leaves every dialog permanently on screen and
+   makes Cancel look broken, because removing .open changes nothing. */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-scrim);
+  place-items: center;
+  padding: var(--space-16);
+  background: var(--scrim);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.modal-overlay.open {
+  display: grid;
+  animation: fade-in var(--dur-modal) var(--ease-enter) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay.open { animation-duration: 0.01ms; }
+}
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-12);
+  padding: var(--space-20) var(--space-20) var(--space-12);
+}
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-8);
+  padding: var(--space-16) var(--space-20);
+  border-top: 1px solid var(--line);
+}
+.modal-close {
+  border: 0;
+  background: transparent;
+  color: var(--text-subtle);
+  font-size: var(--fs-20);
+  line-height: 1;
+  cursor: pointer;
+}
+.modal-close:hover { color: var(--text); }
+
+#toast-container {
+  position: fixed;
+  z-index: var(--z-toast);
+  right: var(--space-16);
+  bottom: var(--space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  width: min(24rem, calc(100vw - var(--space-32)));
+  pointer-events: none;
+}
+
+/* ── Shared utilities the pages assume exist ─────────────── */
+
+.hidden { display: none !important; }
+
+.progress-track {
+  height: 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--action);
+  transition: width var(--dur-modal) var(--ease-spring);
+}
+@media (prefers-reduced-motion: reduce) {
+  .progress-fill { transition-duration: 0.01ms; }
+}
