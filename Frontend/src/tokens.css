@@ -1,0 +1,682 @@
+/* ============================================================
+   src/tokens.css — OPSTS design tokens
+   Online Project Supervision & Tracking System — GCTU
+
+   Everything visual in this app resolves to a variable declared
+   here. Components hold no hex values; pages hold no hex values;
+   the JavaScript that builds markup as strings reads these names.
+
+   Three layers, in order, and the order is the whole point:
+
+     1. PALETTE   raw colour ramps. Named after what they are.
+     2. SEMANTIC  roles. Named after what they mean. Components
+                  only ever use this layer, which is what makes a
+                  dark theme a re-point of ~40 variables instead
+                  of a `dark:` prefix on every element.
+     3. @theme    republishes the same values under Tailwind's
+                  namespaces so `bg-surface` / `text-subtle` exist.
+
+   Provenance of the brand colours is recorded beside them. They
+   were extracted from https://site.gctu.edu.gh/ — its inline
+   theme CSS and the crest at
+   wp-content/themes/gctu/assets/images/logo.png — not eyeballed.
+============================================================ */
+
+/* ══════════════════════════════════════
+   DARK VARIANT
+   Explicit choice wins; absent a choice the OS preference applies.
+══════════════════════════════════════ */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
+
+/* ══════════════════════════════════════
+   1. PALETTE — GCTU NAVY
+   The ramp runs at OKLCH hue 264, which is the hue GCTU's own
+   site uses for its hero and section grounds. Four steps are the
+   university's literal values; the rest are interpolated along
+   that hue so the ramp reads as one family:
+
+     950  #021730  site — deepest section ground
+     900  #011f41  site — header bar, commented "GCTU brand color"
+     800  #071a60  site — section ground
+     — 700..50 interpolated in OKLCH (L 0.32 → 0.97) —
+
+   The crest indigo #292866 (the dominant pixel in the logo) lands
+   at L 0.317 / H 279 — half a step off navy-700 but 15° warmer,
+   so it is kept as its own token for the crest lockup rather than
+   forced into the ramp.
+══════════════════════════════════════ */
+:root {
+  --navy-950: #021730;  /* sourced */
+  --navy-900: #011f41;  /* sourced */
+  --navy-800: #071a60;  /* sourced */
+  --navy-700: #0e2b74;
+  --navy-600: #1f4192;  /* primary action — 9.42:1 on white */
+  --navy-500: #365db8;
+  --navy-400: #5d83d4;
+  --navy-300: #8caae7;
+  --navy-200: #bdd0f4;
+  --navy-100: #dee8fd;
+  --navy-50:  #f1f6ff;
+
+  /* ── GCTU GOLD ──────────────────────────────────────────
+     Accent only. Never a page wash, never a full-width button.
+     gold-400 is the university's own #ffc600 — the value its
+     site uses for buttons and, notably, for its focus outline.
+     gold-700 is the only step that carries text on white (4.71:1). */
+  --gold-700: #906f00;
+  --gold-600: #b58c00;
+  --gold-500: #e0b018;  /* ≈ the crest ring #e2a927 */
+  --gold-400: #ffc600;  /* sourced */
+  --gold-300: #ffd866;
+  --gold-200: #ffeaab;
+  --gold-100: #fff4d0;
+  --gold-50:  #fffae5;
+
+  /* ── CREST ──────────────────────────────────────────────
+     Sampled from the logo PNG itself. Used by the crest lockup
+     and the one permitted gradient (auth backdrop). */
+  --crest-indigo: #292866;
+  --crest-cream:  #fbf9cb;
+  --crest-gold:   #e2a927;
+
+  /* GCTU's site marks #a30218 "GCTU brand color". It is reserved
+     for institutional marks — it is NOT the danger colour, because
+     a brand red that also means "rejected" makes every crest look
+     like an error. */
+  --crest-crimson: #a30218;
+
+  /* ── NEUTRALS ───────────────────────────────────────────
+     Blue-cast (same hue 264) so they belong to the palette.
+     Every step that carries text clears 4.5:1 on white:
+       900 18.6   800 13.6   700 9.2   600 6.0   500 4.6
+     400 and lighter are structure only — never text. */
+  --ink-900: #0e131c;
+  --ink-800: #292e38;
+  --ink-700: #424854;
+  --ink-600: #5d6370;
+  --ink-500: #6e7582;
+  --ink-400: #868c99;
+  --ink-300: #b8bec8;
+  --ink-200: #d9dce3;
+  --ink-100: #eaedf2;
+  --ink-50:  #f5f7fb;
+  --white:   #ffffff;
+
+  /* ── STATUS RAMPS ───────────────────────────────────────
+     Four families, four roles each: text / bg / border / bold.
+     `text` on `bg` clears 4.5:1 in every family. Colour is never
+     the only signal — every status also carries a label and a
+     glyph (see .lozenge) so it survives a projector. */
+  --ok-text:   #0e653f;
+  --ok-bold:   #157c4f;
+  --ok-border: #3f9d6b;
+  --ok-bg:     #e0f7e9;
+
+  --warn-text:   #8f520d;
+  --warn-bold:   #b66c18;
+  --warn-border: #b97634;
+  --warn-bg:     #ffecdc;
+
+  --risk-text:   #972f29;
+  --risk-bold:   #b63b35;
+  --risk-border: #c66459;
+  --risk-bg:     #ffe9e5;
+
+  --info-text:   #1f4192;
+  --info-bold:   #2a53b3;
+  --info-border: #6484d1;
+  --info-bg:     #e6f1ff;
+}
+
+/* ══════════════════════════════════════
+   2. SEMANTIC — LIGHT
+   Components use only these names.
+══════════════════════════════════════ */
+:root {
+  /* Surfaces. `canvas` is the page; `surface` is what sits on it.
+     Raised and overlay are the same colour as surface — depth is
+     carried by shadow, not by tint, which is what keeps a card on
+     a card readable. */
+  --canvas:            var(--ink-50);
+  --surface:           var(--white);
+  --surface-raised:    var(--white);
+  --surface-overlay:   var(--white);
+  --surface-sunken:    var(--ink-50);
+  --surface-hovered:   var(--ink-50);
+  --surface-pressed:   var(--ink-100);
+  --surface-selected:  var(--navy-50);
+  --surface-inverse:   var(--navy-900);
+
+  /* Text */
+  --text:           var(--ink-900);
+  --text-subtle:    var(--ink-700);
+  --text-subtlest:  var(--ink-600);
+  --text-placeholder: var(--ink-500);
+  --text-disabled:  var(--ink-400);
+  --text-inverse:   var(--white);
+  --text-brand:     var(--navy-600);
+  --text-link:      var(--navy-600);
+
+  /* Borders. `--line` is the hairline that separates rows and
+     panels; `--border-strong` is for a boundary that must clear
+     3:1 as a UI component (inputs, checkbox, switch track). */
+  --line:            #d3d8e0;
+  --border-strong:   var(--ink-400);
+  --border-input:    var(--ink-400);
+  --border-selected: var(--navy-600);
+  --border-inverse:  rgba(255, 255, 255, 0.24);
+
+  /* Action — navy is structure AND primary action. */
+  --action:            var(--navy-600);
+  --action-hovered:    var(--navy-700);
+  --action-pressed:    var(--navy-800);
+  --action-text:       var(--white);
+  --action-subtle:     var(--navy-50);
+  --action-subtle-hovered: var(--navy-100);
+
+  /* Accent — gold. Active nav indicator, focus ring, one key
+     metric, the crest lockup. That is the entire list. */
+  --accent:        var(--gold-400);
+  --accent-strong: var(--gold-600);
+  --accent-text:   var(--gold-700);
+  --accent-bg:     var(--gold-100);
+
+  /* Focus. A gold ring alone measures 1.58:1 on white, which fails
+     WCAG 2.2 SC 1.4.11 — so the ring is two-tone: gold against the
+     surface, wrapped in a dark halo that guarantees 3:1 whatever
+     the ring happens to land on. */
+  --focus-ring:
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--gold-400),
+    0 0 0 5px rgba(2, 23, 48, 0.55);
+  --focus-ring-inverse:
+    0 0 0 2px var(--navy-900),
+    0 0 0 4px var(--gold-400);
+
+  /* Sidebar — a light rail, not a dark one. Nav text measures
+     7.6:1 against it. */
+  --nav-bg:        var(--white);
+  --nav-text:      var(--ink-700);
+  --nav-text-active: var(--navy-800);
+  --nav-hovered:   var(--ink-50);
+  --nav-selected:  var(--navy-50);
+  --nav-indicator: var(--gold-400);
+  --nav-line:      var(--ink-100);
+
+  /* Glass. Four places only: the sticky top bar past 8px of
+     scroll, the notification/command overlays, modal scrims, and
+     the mobile bottom bar. Data never sits on it. */
+  --glass-bg:     color-mix(in oklab, var(--surface) 72%, transparent);
+  --glass-line:   color-mix(in oklab, var(--line) 60%, transparent);
+  --glass-inset:  inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --scrim:        rgba(2, 23, 48, 0.44);
+
+  /* Skeletons */
+  --skeleton:       var(--ink-100);
+  --skeleton-sheen: var(--ink-50);
+}
+
+/* ══════════════════════════════════════
+   ELEVATION
+   Layered and navy-tinted. A single flat black shadow reads as a
+   sticker; two offsets at different radii read as a surface with
+   air under it. rgb(2,23,48) is --navy-950.
+══════════════════════════════════════ */
+:root {
+  --shadow-sm:
+    0 1px 2px rgba(2, 23, 48, 0.06),
+    0 1px 3px rgba(2, 23, 48, 0.04);
+  --shadow-md:
+    0 2px 4px rgba(2, 23, 48, 0.05),
+    0 6px 16px -4px rgba(2, 23, 48, 0.10);
+  --shadow-lg:
+    0 8px 24px -6px rgba(2, 23, 48, 0.14),
+    0 24px 48px -12px rgba(2, 23, 48, 0.14);
+  /* Overflow shadow — the cue that a scroll container has more
+     content past its edge. */
+  --shadow-overflow: 0 0 8px rgba(2, 23, 48, 0.16), 0 0 1px rgba(2, 23, 48, 0.12);
+}
+
+/* ══════════════════════════════════════
+   TYPOGRAPHY
+   Two families, three roles.
+
+   Fraunces (display) — a variable serif with a real optical-size
+   axis, so one file covers 20px section headings and 49px display
+   without setting large text in small-text shapes. It carries the
+   institutional register the crest already sets.
+
+   Inter (body, UI, numerals) — with the character variants that
+   matter in a system full of index numbers, staff IDs and UUIDs:
+   cv05 gives lowercase l a tail and cv08 gives uppercase I serifs,
+   which is the difference between 1, l and I being distinguishable
+   in "04220231D" and not.
+
+   Numerals are tabular anywhere a number sits in a column.
+══════════════════════════════════════ */
+:root {
+  --ff-display: "Fraunces", "Fraunces Fallback", Georgia, "Times New Roman", serif;
+  --ff-body: "Inter", "Inter Fallback", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ff-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", monospace;
+
+  /* Modular scale, 1.25 from a 16px base, rounded to whole px. */
+  --fs-12: 0.75rem;
+  --fs-14: 0.875rem;
+  --fs-16: 1rem;
+  --fs-20: 1.25rem;
+  --fs-25: 1.5625rem;
+  --fs-31: 1.9375rem;
+  --fs-39: 2.4375rem;
+  --fs-49: 3.0625rem;
+
+  /* Display sizes fluid between 360px and 1280px viewports. */
+  --fs-display-1: clamp(2rem, 1.35rem + 2.9vw, 3.0625rem);
+  --fs-display-2: clamp(1.75rem, 1.32rem + 1.9vw, 2.4375rem);
+
+  --lh-display: 1.15;
+  --lh-heading: 1.3;
+  --lh-body: 1.55;
+  --lh-dense: 1.4;
+
+  --ls-display: -0.03em;
+  --ls-heading: -0.02em;
+  --ls-body: 0;
+  --ls-caps: 0.06em;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  /* Reading measure. Feedback and any prose stops at 68 characters. */
+  --measure: 68ch;
+}
+
+/* ══════════════════════════════════════
+   SPACE
+   4-based, matching the rhythm Atlassian's spacing foundation
+   actually uses (2/4/6/8/12/16/20/24/32/40/48/64/80).
+══════════════════════════════════════ */
+:root {
+  --space-2: 0.125rem;
+  --space-4: 0.25rem;
+  --space-6: 0.375rem;
+  --space-8: 0.5rem;
+  --space-12: 0.75rem;
+  --space-16: 1rem;
+  --space-20: 1.25rem;
+  --space-24: 1.5rem;
+  --space-32: 2rem;
+  --space-40: 2.5rem;
+  --space-48: 3rem;
+  --space-64: 4rem;
+  --space-80: 5rem;
+
+  /* Layout */
+  --nav-width: 16rem;
+  --topbar-height: 3.75rem;
+  --page-max: 78rem;
+  --hit-target: 2.75rem; /* 44px */
+}
+
+/* ══════════════════════════════════════
+   RADIUS
+   Nothing above 12px on a data container. Pills are for lozenges
+   and avatars only.
+══════════════════════════════════════ */
+:root {
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+}
+
+/* ══════════════════════════════════════
+   MOTION
+   Durations are this product's; easings are Material 3's, taken
+   from the published token set. Motion explains where a thing
+   came from. Nothing exceeds 320ms.
+══════════════════════════════════════ */
+:root {
+  --dur-fast: 120ms;   /* hover, focus */
+  --dur-state: 180ms;  /* lozenge, toggle, state change */
+  --dur-pop: 240ms;    /* dropdown, popover */
+  --dur-modal: 320ms;  /* modal, drawer, route change */
+
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-enter: cubic-bezier(0.2, 0, 0, 1);
+  --ease-exit: cubic-bezier(0.3, 0, 1, 1);
+  --ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --ease-spring: cubic-bezier(0.2, 1.1, 0.3, 1);
+
+  --stagger: 24ms;
+}
+
+/* ══════════════════════════════════════
+   Z-INDEX
+   One ladder, so nothing has to guess a number.
+══════════════════════════════════════ */
+:root {
+  --z-base: 0;
+  --z-sticky: 20;
+  --z-nav: 30;
+  --z-dropdown: 40;
+  --z-scrim: 50;
+  --z-modal: 60;
+  --z-toast: 70;
+}
+
+/* ══════════════════════════════════════
+   2b. SEMANTIC — DARK
+   A re-point of the semantic layer only. The palette above is
+   untouched; the ramps simply get read from the other end.
+══════════════════════════════════════ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --canvas: #0b0f18;
+    --surface: #161b26;
+    --surface-raised: #1b2130;
+    --surface-overlay: #1f2534;
+    --surface-sunken: #10151f;
+    --surface-hovered: #222939;
+    --surface-pressed: #2a3243;
+    --surface-selected: #16233f;
+    --surface-inverse: var(--white);
+
+    --text: #eff2f7;
+    --text-subtle: #c3c7d1;
+    --text-subtlest: #a2a8b3;
+    --text-placeholder: #8b919d;
+    --text-disabled: #666d7b;
+    --text-inverse: var(--ink-900);
+    --text-brand: #9db8ee;
+    --text-link: #9db8ee;
+
+    --line: #2b3243;
+    --border-strong: #4a5265;
+    --border-input: #4a5265;
+    --border-selected: #6e91d9;
+    --border-inverse: rgba(2, 23, 48, 0.24);
+
+    --action: #2f56b8;
+    --action-hovered: #3c67cf;
+    --action-pressed: #4a77e0;
+    --action-text: var(--white);
+    --action-subtle: #16233f;
+    --action-subtle-hovered: #1d2f52;
+
+    --accent: var(--gold-400);
+    --accent-strong: var(--gold-300);
+    --accent-text: var(--gold-300);
+    --accent-bg: #3a2f0a;
+
+    --focus-ring:
+      0 0 0 2px var(--surface),
+      0 0 0 4px var(--gold-400),
+      0 0 0 5px rgba(0, 0, 0, 0.6);
+
+    --ok-text: #7fd6a6;
+    --ok-bold: #157c4f;
+    --ok-border: #2f7d55;
+    --ok-bg: #10291d;
+
+    --warn-text: #f0b775;
+    --warn-bold: #b66c18;
+    --warn-border: #8a5a24;
+    --warn-bg: #2e1f0e;
+
+    --risk-text: #f5a49b;
+    --risk-bold: #b63b35;
+    --risk-border: #94443c;
+    --risk-bg: #2e1614;
+
+    --info-text: #9db8ee;
+    --info-bold: #2a53b3;
+    --info-border: #40598f;
+    --info-bg: #131f37;
+
+    --nav-bg: #10151f;
+    --nav-text: #c3c7d1;
+    --nav-text-active: #eff2f7;
+    --nav-hovered: #1b2130;
+    --nav-selected: #16233f;
+    --nav-indicator: var(--gold-400);
+    --nav-line: #232a3a;
+
+    --glass-bg: color-mix(in oklab, var(--surface) 74%, transparent);
+    --glass-line: color-mix(in oklab, var(--line) 70%, transparent);
+    --glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    --scrim: rgba(0, 0, 0, 0.62);
+
+    --skeleton: #222939;
+    --skeleton-sheen: #2a3243;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.36);
+    --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.4), 0 6px 16px -4px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 24px -6px rgba(0, 0, 0, 0.6), 0 24px 48px -12px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* The explicit choice. Same block; higher specificity wins over
+   the media query in both directions. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #0b0f18;
+  --surface: #161b26;
+  --surface-raised: #1b2130;
+  --surface-overlay: #1f2534;
+  --surface-sunken: #10151f;
+  --surface-hovered: #222939;
+  --surface-pressed: #2a3243;
+  --surface-selected: #16233f;
+  --surface-inverse: var(--white);
+
+  --text: #eff2f7;
+  --text-subtle: #c3c7d1;
+  --text-subtlest: #a2a8b3;
+  --text-placeholder: #8b919d;
+  --text-disabled: #666d7b;
+  --text-inverse: var(--ink-900);
+  --text-brand: #9db8ee;
+  --text-link: #9db8ee;
+
+  --line: #2b3243;
+  --border-strong: #4a5265;
+  --border-input: #4a5265;
+  --border-selected: #6e91d9;
+  --border-inverse: rgba(2, 23, 48, 0.24);
+
+  --action: #2f56b8;
+  --action-hovered: #3c67cf;
+  --action-pressed: #4a77e0;
+  --action-text: var(--white);
+  --action-subtle: #16233f;
+  --action-subtle-hovered: #1d2f52;
+
+  --accent: var(--gold-400);
+  --accent-strong: var(--gold-300);
+  --accent-text: var(--gold-300);
+  --accent-bg: #3a2f0a;
+
+  --focus-ring:
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--gold-400),
+    0 0 0 5px rgba(0, 0, 0, 0.6);
+
+  --ok-text: #7fd6a6;
+  --ok-bold: #157c4f;
+  --ok-border: #2f7d55;
+  --ok-bg: #10291d;
+
+  --warn-text: #f0b775;
+  --warn-bold: #b66c18;
+  --warn-border: #8a5a24;
+  --warn-bg: #2e1f0e;
+
+  --risk-text: #f5a49b;
+  --risk-bold: #b63b35;
+  --risk-border: #94443c;
+  --risk-bg: #2e1614;
+
+  --info-text: #9db8ee;
+  --info-bold: #2a53b3;
+  --info-border: #40598f;
+  --info-bg: #131f37;
+
+  --nav-bg: #10151f;
+  --nav-text: #c3c7d1;
+  --nav-text-active: #eff2f7;
+  --nav-hovered: #1b2130;
+  --nav-selected: #16233f;
+  --nav-indicator: var(--gold-400);
+  --nav-line: #232a3a;
+
+  --glass-bg: color-mix(in oklab, var(--surface) 74%, transparent);
+  --glass-line: color-mix(in oklab, var(--line) 70%, transparent);
+  --glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --scrim: rgba(0, 0, 0, 0.62);
+
+  --skeleton: #222939;
+  --skeleton-sheen: #2a3243;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.36);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.4), 0 6px 16px -4px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 24px -6px rgba(0, 0, 0, 0.6), 0 24px 48px -12px rgba(0, 0, 0, 0.6);
+}
+
+/* Layered translucency is expensive and, for some readers, hard.
+   Both opt-outs collapse glass to a solid surface. */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass-bg: var(--surface);
+  }
+}
+@supports not (backdrop-filter: blur(1px)) {
+  :root {
+    --glass-bg: var(--surface);
+  }
+}
+
+/* Hard requirement, not a nicety. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0.01ms;
+    --dur-state: 0.01ms;
+    --dur-pop: 0.01ms;
+    --dur-modal: 0.01ms;
+    --stagger: 0ms;
+  }
+}
+
+/* ══════════════════════════════════════
+   3. TAILWIND THEME
+   `inline` keeps these as var() references, so every utility
+   follows the theme swap without a `dark:` prefix.
+══════════════════════════════════════ */
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-overlay: var(--surface-overlay);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-hovered: var(--surface-hovered);
+  --color-surface-selected: var(--surface-selected);
+  --color-surface-inverse: var(--surface-inverse);
+
+  --color-text: var(--text);
+  --color-subtle: var(--text-subtle);
+  --color-subtlest: var(--text-subtlest);
+  --color-inverse: var(--text-inverse);
+  --color-brand: var(--text-brand);
+  --color-link: var(--text-link);
+
+  --color-line: var(--line);
+  --color-border-strong: var(--border-strong);
+  --color-border-selected: var(--border-selected);
+
+  --color-action: var(--action);
+  --color-action-hovered: var(--action-hovered);
+  --color-action-subtle: var(--action-subtle);
+
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-text: var(--accent-text);
+  --color-accent-bg: var(--accent-bg);
+
+  --color-ok: var(--ok-text);
+  --color-ok-bg: var(--ok-bg);
+  --color-ok-bold: var(--ok-bold);
+  --color-warn: var(--warn-text);
+  --color-warn-bg: var(--warn-bg);
+  --color-warn-bold: var(--warn-bold);
+  --color-risk: var(--risk-text);
+  --color-risk-bg: var(--risk-bg);
+  --color-risk-bold: var(--risk-bold);
+  --color-info: var(--info-text);
+  --color-info-bg: var(--info-bg);
+  --color-info-bold: var(--info-bold);
+
+  --color-navy-950: var(--navy-950);
+  --color-navy-900: var(--navy-900);
+  --color-navy-800: var(--navy-800);
+  --color-navy-700: var(--navy-700);
+  --color-navy-600: var(--navy-600);
+  --color-navy-500: var(--navy-500);
+  --color-navy-400: var(--navy-400);
+  --color-navy-300: var(--navy-300);
+  --color-navy-200: var(--navy-200);
+  --color-navy-100: var(--navy-100);
+  --color-navy-50: var(--navy-50);
+
+  --color-gold-700: var(--gold-700);
+  --color-gold-600: var(--gold-600);
+  --color-gold-500: var(--gold-500);
+  --color-gold-400: var(--gold-400);
+  --color-gold-300: var(--gold-300);
+  --color-gold-200: var(--gold-200);
+  --color-gold-100: var(--gold-100);
+  --color-gold-50: var(--gold-50);
+
+  --font-sans: var(--ff-body);
+  --font-display: var(--ff-display);
+  --font-mono: var(--ff-mono);
+
+  --text-12: var(--fs-12);
+  --text-14: var(--fs-14);
+  --text-16: var(--fs-16);
+  --text-20: var(--fs-20);
+  --text-25: var(--fs-25);
+  --text-31: var(--fs-31);
+  --text-39: var(--fs-39);
+  --text-49: var(--fs-49);
+
+  --radius-xs: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-pill: var(--radius-pill);
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  --spacing-nav: var(--nav-width);
+  --spacing-topbar: var(--topbar-height);
+  --spacing-page: var(--page-max);
+  --spacing-measure: var(--measure);
+
+  --ease-standard: var(--ease-standard);
+  --ease-enter: var(--ease-enter);
+  --ease-exit: var(--ease-exit);
+}

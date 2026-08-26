@@ -1,0 +1,1433 @@
+/* ============================================================
+   src/components.css — Primitives
+   OPSTS — GCTU
+
+   The component layer. Two rules govern what belongs here:
+
+     * Anything the portal scripts emit as an HTML *string* must be
+       a class, not a pile of utilities. A forty-utility string
+       inside a template literal is unreadable, undiffable, and has
+       to be kept byte-identical with the copy in the static page.
+     * Anything repeated across the pages — the shell, the nav, the
+       lozenge, the empty state — is a class, so a change lands in
+       one file rather than twenty-one.
+
+   Page-level layout (grids, one-off widths) stays as utilities in
+   the markup, where it reads well and changes often.
+
+   No hex values. Every colour is a semantic token from tokens.css.
+============================================================ */
+
+/* ══════════════════════════════════════
+   TYPE ROLES
+   Hierarchy comes from weight and colour before it comes from
+   size. A 14px 600 label above a 14px 400 value beats a 20px
+   heading, and costs less vertical space.
+══════════════════════════════════════ */
+.type-display-1 {
+  font-family: var(--ff-display);
+  font-size: var(--fs-display-1);
+  line-height: var(--lh-display);
+  letter-spacing: var(--ls-display);
+  font-weight: var(--fw-semibold);
+}
+.type-display-2 {
+  font-family: var(--ff-display);
+  font-size: var(--fs-display-2);
+  line-height: var(--lh-display);
+  letter-spacing: var(--ls-display);
+  font-weight: var(--fw-semibold);
+}
+.type-heading-l {
+  font-family: var(--ff-display);
+  font-size: var(--fs-31);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
+  font-weight: var(--fw-semibold);
+}
+.type-heading-m {
+  font-family: var(--ff-display);
+  font-size: var(--fs-25);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
+  font-weight: var(--fw-semibold);
+}
+.type-heading-s {
+  font-family: var(--ff-display);
+  font-size: var(--fs-20);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
+  font-weight: var(--fw-semibold);
+}
+/* Card and section headings drop the serif: at 16px Fraunces is
+   working below its optical range and Inter is simply clearer. */
+.type-heading-xs {
+  font-family: var(--ff-body);
+  font-size: var(--fs-16);
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0;
+}
+
+.type-body-l {
+  font-size: var(--fs-16);
+  line-height: var(--lh-body);
+  max-width: var(--measure);
+}
+.type-body {
+  font-size: var(--fs-14);
+  line-height: var(--lh-body);
+}
+.type-body-s {
+  font-size: var(--fs-12);
+  line-height: var(--lh-dense);
+}
+
+/* The all-caps eyebrow. Small caps need the extra tracking or
+   they set as a solid block. */
+.type-label {
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--text-subtlest);
+  line-height: var(--lh-dense);
+}
+
+/* Metrics get their own role because a figure is not a heading:
+   it is tabular, it is tight, and it never wraps. */
+.type-metric-l,
+.type-metric-m,
+.type-metric-s {
+  font-family: var(--ff-body);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum", "cv05", "cv08";
+  letter-spacing: var(--ls-heading);
+  line-height: 1.1;
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
+.type-metric-l {
+  font-size: var(--fs-39);
+}
+.type-metric-m {
+  font-size: var(--fs-25);
+}
+.type-metric-s {
+  font-size: var(--fs-20);
+}
+
+.text-subtle {
+  color: var(--text-subtle);
+}
+.text-subtlest {
+  color: var(--text-subtlest);
+}
+.measure {
+  max-width: var(--measure);
+}
+
+/* ══════════════════════════════════════
+   LAYOUT PRIMITIVES
+══════════════════════════════════════ */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+.stack-8 {
+  gap: var(--space-8);
+}
+.stack-24 {
+  gap: var(--space-24);
+}
+.stack-32 {
+  gap: var(--space-32);
+}
+
+.cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-12);
+}
+.cluster-8 {
+  gap: var(--space-8);
+}
+.cluster-between {
+  justify-content: space-between;
+}
+
+/* ══════════════════════════════════════
+   GLASS
+   Four places, and this is the list: the sticky top bar past 8px
+   of scroll, the notification/command overlays, modal scrims, and
+   the mobile bottom bar. Data never sits on it — text on frosted
+   glass is a legibility failure, and this app is mostly data.
+
+   The opaque fallback is in tokens.css, on both @supports and
+   prefers-reduced-transparency.
+══════════════════════════════════════ */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  box-shadow: var(--glass-inset);
+}
+
+/* ══════════════════════════════════════
+   SURFACES
+   Elevation is a surface with air under it, never a tint. A card
+   inside a card is the same colour; only the shadow differs.
+══════════════════════════════════════ */
+.surface {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line);
+}
+
+.card {
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-20);
+}
+
+.card-flush {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Only for a card that is genuinely a link or button. A hover
+   lift on a static card promises an interaction that isn't there. */
+.card-interactive {
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: box-shadow var(--dur-fast) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard);
+}
+.card-interactive:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--ink-300);
+  transform: translateY(-1px);
+}
+.card-interactive:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-12);
+  margin-bottom: var(--space-16);
+}
+
+/* A rule under a section label, drawn with space rather than a
+   border wherever it can be. */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--text-subtlest);
+  margin-bottom: var(--space-12);
+}
+
+/* ══════════════════════════════════════
+   BUTTONS
+   Four appearances, and each means something:
+     primary   the one action this screen exists for
+     secondary anything else that writes
+     ghost     navigation and reversible actions
+     danger    destructive, and only ever after a confirm
+══════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  min-height: var(--hit-target);
+  padding: var(--space-8) var(--space-16);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-14);
+  font-weight: var(--fw-semibold);
+  line-height: 1.2;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  transition: background-color var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard),
+    box-shadow var(--dur-fast) var(--ease-standard);
+}
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.55;
+  pointer-events: none;
+}
+.btn svg {
+  flex: none;
+  width: 1em;
+  height: 1em;
+}
+
+.btn-primary {
+  background: var(--action);
+  color: var(--action-text);
+  box-shadow: var(--shadow-sm);
+}
+.btn-primary:hover {
+  background: var(--action-hovered);
+}
+.btn-primary:active {
+  background: var(--action-pressed);
+  box-shadow: none;
+}
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--line);
+  box-shadow: var(--shadow-sm);
+}
+.btn-secondary:hover {
+  background: var(--surface-hovered);
+  border-color: var(--ink-300);
+}
+.btn-secondary:active {
+  background: var(--surface-pressed);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-subtle);
+}
+.btn-ghost:hover {
+  background: var(--surface-hovered);
+  color: var(--text);
+}
+
+.btn-danger {
+  background: var(--surface);
+  color: var(--risk-text);
+  border-color: var(--risk-border);
+}
+.btn-danger:hover {
+  background: var(--risk-bg);
+}
+
+/* A link that is a button, for "cancel" next to a submit. */
+.btn-link {
+  background: none;
+  color: var(--text-link);
+  padding-inline: var(--space-4);
+  min-height: 0;
+}
+.btn-link:hover {
+  text-decoration: underline;
+}
+
+.btn-sm {
+  min-height: 2rem;
+  padding: var(--space-4) var(--space-12);
+  font-size: var(--fs-12);
+}
+.btn-lg {
+  min-height: 3rem;
+  padding: var(--space-12) var(--space-24);
+  font-size: var(--fs-16);
+}
+
+.btn-icon {
+  padding: var(--space-8);
+  width: var(--hit-target);
+  min-width: var(--hit-target);
+}
+
+.btn-block {
+  width: 100%;
+}
+
+/* Busy state. The label stays visible — a button that blanks its
+   own text on submit loses its accessible name mid-action, and the
+   user loses the only word telling them what is happening. The
+   spinner is added beside it, and `aria-busy` carries the state to
+   anyone not looking at it. */
+.btn[data-busy="true"] {
+  pointer-events: none;
+  position: relative;
+}
+.btn[data-busy="true"]::before {
+  content: "";
+  width: 1em;
+  height: 1em;
+  flex: none;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  opacity: 0.8;
+  animation: spin 640ms linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn[data-busy="true"]::before {
+    animation-duration: 1600ms;
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ══════════════════════════════════════
+   LOZENGE — status
+   Compact, bounded, and never colour alone: every lozenge carries
+   a label and a glyph, so a supervisor reading a queue on a
+   projector still gets the status.
+
+   The variants map 1:1 onto values the API can actually return.
+   There is no lozenge for a status the backend cannot emit.
+══════════════════════════════════════ */
+.lozenge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-8);
+  border-radius: var(--radius-xs);
+  border: 1px solid;
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  transition: background-color var(--dur-state) var(--ease-standard),
+    color var(--dur-state) var(--ease-standard),
+    border-color var(--dur-state) var(--ease-standard);
+}
+.lozenge svg {
+  width: 0.875em;
+  height: 0.875em;
+  flex: none;
+}
+
+.lozenge-ok {
+  background: var(--ok-bg);
+  color: var(--ok-text);
+  border-color: var(--ok-border);
+}
+.lozenge-warn {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  border-color: var(--warn-border);
+}
+.lozenge-risk {
+  background: var(--risk-bg);
+  color: var(--risk-text);
+  border-color: var(--risk-border);
+}
+.lozenge-info {
+  background: var(--info-bg);
+  color: var(--info-text);
+  border-color: var(--info-border);
+}
+.lozenge-neutral {
+  background: var(--surface-sunken);
+  color: var(--text-subtle);
+  border-color: var(--line);
+}
+
+/* Bold appearance for the one lozenge on a screen that has to win
+   a fight — a "3 awaiting review" count in a queue header. */
+.lozenge-bold {
+  border-color: transparent;
+  color: var(--white);
+}
+.lozenge-bold.lozenge-ok {
+  background: var(--ok-bold);
+}
+.lozenge-bold.lozenge-warn {
+  background: var(--warn-bold);
+}
+.lozenge-bold.lozenge-risk {
+  background: var(--risk-bold);
+}
+.lozenge-bold.lozenge-info {
+  background: var(--info-bold);
+}
+
+/* ══════════════════════════════════════
+   FIELDS
+   Label above, hint under the label, error under the control and
+   tied to it by aria-describedby. Placeholder is never the label.
+══════════════════════════════════════ */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.field-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: var(--fs-14);
+  font-weight: var(--fw-semibold);
+}
+
+/* Required is marked, not implied. The asterisk is decorative —
+   the input carries `required`, which is what gets announced. */
+.field-required::after {
+  content: "*";
+  color: var(--risk-text);
+  font-weight: var(--fw-bold);
+}
+
+.field-hint {
+  font-size: var(--fs-12);
+  color: var(--text-subtlest);
+  line-height: var(--lh-dense);
+}
+
+.field-error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-6);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-medium);
+  color: var(--risk-text);
+  line-height: var(--lh-dense);
+}
+.field-error svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex: none;
+  margin-top: 0.1em;
+}
+.field-error:empty {
+  display: none;
+}
+
+.field-row {
+  display: grid;
+  gap: var(--space-16);
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
+/* ══════════════════════════════════════
+   MESSAGES
+   `banner`  page-level, above the app frame, for a condition that
+             outlives the page (must_change_password).
+   `message` section-level, inside the flow, for the result of the
+             thing the user just did.
+
+   Both surface the server's own `message` verbatim. Every error
+   the API returns is already written for a human; replacing it
+   with "Something went wrong" throws away the only sentence that
+   told the user what to do.
+══════════════════════════════════════ */
+.banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  padding: var(--space-12) var(--space-24);
+  font-size: var(--fs-14);
+  font-weight: var(--fw-medium);
+  border-bottom: 1px solid;
+}
+.banner svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex: none;
+}
+.banner-warn {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  border-color: var(--warn-border);
+}
+.banner-risk {
+  background: var(--risk-bg);
+  color: var(--risk-text);
+  border-color: var(--risk-border);
+}
+.banner-info {
+  background: var(--info-bg);
+  color: var(--info-text);
+  border-color: var(--info-border);
+}
+.banner-actions {
+  margin-left: auto;
+  display: flex;
+  gap: var(--space-8);
+}
+
+.message {
+  display: flex;
+  gap: var(--space-12);
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid;
+  border-radius: var(--radius-md);
+  font-size: var(--fs-14);
+  line-height: var(--lh-body);
+}
+.message svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex: none;
+  margin-top: 0.15em;
+}
+.message-title {
+  font-weight: var(--fw-semibold);
+  margin-bottom: var(--space-2);
+}
+.message-ok {
+  background: var(--ok-bg);
+  color: var(--ok-text);
+  border-color: var(--ok-border);
+}
+.message-warn {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  border-color: var(--warn-border);
+}
+.message-risk {
+  background: var(--risk-bg);
+  color: var(--risk-text);
+  border-color: var(--risk-border);
+}
+.message-info {
+  background: var(--info-bg);
+  color: var(--info-text);
+  border-color: var(--info-border);
+}
+
+/* ══════════════════════════════════════
+   EMPTY STATE
+   Designed before the populated state, because it is the first
+   thing every user sees. Heading says what is missing, one line
+   says why, and the action resolves it. Typographic, not
+   illustrated — an illustration that has to be drawn five ways is
+   an illustration that never ships.
+══════════════════════════════════════ */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-12);
+  padding: var(--space-48) var(--space-24);
+}
+
+/* A quiet mark, built from the token ramp rather than an asset. */
+.empty-mark {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+  border: 1px solid var(--line);
+  color: var(--text-subtlest);
+}
+.empty-mark svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.empty-title {
+  font-family: var(--ff-display);
+  font-size: var(--fs-20);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-heading);
+}
+
+.empty-body {
+  font-size: var(--fs-14);
+  color: var(--text-subtle);
+  max-width: 44ch;
+  line-height: var(--lh-body);
+}
+
+.empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-8);
+  margin-top: var(--space-4);
+}
+
+/* ══════════════════════════════════════
+   SKELETONS
+   Shaped like the layout they stand in for, so nothing moves when
+   the data lands. Never a spinner over the whole page.
+══════════════════════════════════════ */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--skeleton) 0%,
+    var(--skeleton-sheen) 50%,
+    var(--skeleton) 100%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--radius-sm);
+  animation: skeleton-sheen 1.4s ease-in-out infinite;
+}
+@keyframes skeleton-sheen {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background: var(--skeleton);
+  }
+}
+
+.skeleton-line {
+  height: 0.75rem;
+  margin-block: var(--space-6);
+}
+.skeleton-line-sm {
+  height: 0.625rem;
+  width: 40%;
+}
+.skeleton-block {
+  height: 6rem;
+}
+
+/* ══════════════════════════════════════
+   METER — a derived percentage
+   The value is always the server's. The bar animates from its
+   previous position to the new one after a refetch; it never
+   guesses ahead of the response.
+══════════════════════════════════════ */
+.meter {
+  position: relative;
+  height: 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.meter-fill {
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: var(--action);
+  transform-origin: left center;
+  transition: width var(--dur-modal) var(--ease-spring);
+}
+.meter-complete .meter-fill {
+  background: var(--ok-bold);
+}
+
+/* ══════════════════════════════════════
+   TABLE WRAPPER
+   Wide tables scroll inside their own box. The overflow shadow is
+   the only cue that there is more to the right.
+══════════════════════════════════════ */
+.table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-sm);
+}
+.table-wrap table {
+  min-width: 40rem;
+}
+
+/* ══════════════════════════════════════
+   AVATAR
+══════════════════════════════════════ */
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: none;
+  border-radius: var(--radius-pill);
+  background: var(--action-subtle);
+  /* --text-brand, not a fixed navy: on the dark theme the subtle
+     action fill is itself navy, and a navy monogram on it vanishes. */
+  color: var(--text-brand);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  user-select: none;
+}
+.avatar-lg {
+  width: 3rem;
+  height: 3rem;
+  font-size: var(--fs-14);
+}
+
+/* ══════════════════════════════════════
+   APP SHELL
+══════════════════════════════════════ */
+.app-shell {
+  display: grid;
+  grid-template-columns: var(--nav-width) minmax(0, 1fr);
+  min-height: 100dvh;
+}
+@media (max-width: 1024px) {
+  .app-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.app-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-content {
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding: var(--space-24);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-24);
+}
+@media (max-width: 640px) {
+  .app-content {
+    padding: var(--space-16);
+    /* Clear of the mobile bottom bar. */
+    padding-bottom: var(--space-80);
+  }
+}
+
+/* ── Top bar ─────────────────────────────────────────────
+   Glass only once the page has scrolled past 8px; flat before
+   that, so a page at rest has no edge that isn't real. */
+.app-topbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  height: var(--topbar-height);
+  padding-inline: var(--space-24);
+  background: var(--surface);
+  border-bottom: 1px solid transparent;
+  transition: background-color var(--dur-state) var(--ease-standard),
+    border-color var(--dur-state) var(--ease-standard),
+    backdrop-filter var(--dur-state) var(--ease-standard);
+}
+.app-topbar[data-scrolled="true"] {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  border-bottom-color: var(--glass-line);
+  box-shadow: var(--glass-inset);
+}
+@media (max-width: 640px) {
+  .app-topbar {
+    padding-inline: var(--space-16);
+  }
+}
+
+/* ── Side navigation ─────────────────────────────────────
+   A light rail. The selected item is a subtle fill plus a gold
+   leading indicator — gold's only structural job in the app. */
+.app-nav {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-16) var(--space-12);
+  background: var(--nav-bg);
+  border-right: 1px solid var(--nav-line);
+  z-index: var(--z-nav);
+}
+@media (max-width: 1024px) {
+  .app-nav {
+    display: none;
+  }
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-8) var(--space-16);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--nav-line);
+}
+.nav-brand img {
+  width: 2rem;
+  height: 2rem;
+  object-fit: contain;
+}
+.nav-brand-name {
+  font-family: var(--ff-display);
+  font-size: var(--fs-16);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-heading);
+  line-height: 1.1;
+}
+.nav-brand-sub {
+  font-size: var(--fs-12);
+  color: var(--text-subtlest);
+  line-height: 1.2;
+}
+
+.nav-section {
+  padding: var(--space-16) var(--space-8) var(--space-4);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--text-subtlest);
+}
+
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  min-height: var(--hit-target);
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius-md);
+  color: var(--nav-text);
+  font-size: var(--fs-14);
+  font-weight: var(--fw-medium);
+  text-decoration: none;
+  transition: background-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard);
+}
+.nav-item svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex: none;
+  opacity: 0.85;
+}
+.nav-item:hover {
+  background: var(--nav-hovered);
+  color: var(--text);
+}
+.nav-item[aria-current="page"] {
+  background: var(--nav-selected);
+  color: var(--nav-text-active);
+  font-weight: var(--fw-semibold);
+}
+.nav-item[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  translate: 0 -50%;
+  width: 3px;
+  height: 1.25rem;
+  border-radius: var(--radius-pill);
+  background: var(--nav-indicator);
+}
+.nav-item-count {
+  margin-left: auto;
+}
+
+/* ── Mobile bottom bar ───────────────────────────────── */
+.nav-bottom {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: var(--z-nav);
+  display: none;
+  justify-content: space-around;
+  gap: var(--space-4);
+  padding: var(--space-6) var(--space-8)
+    calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  border-top: 1px solid var(--glass-line);
+}
+@media (max-width: 1024px) {
+  .nav-bottom {
+    display: flex;
+  }
+}
+.nav-bottom .nav-item {
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-12);
+  text-align: center;
+  padding: var(--space-4);
+}
+.nav-bottom .nav-item[aria-current="page"]::before {
+  inset: auto auto 2px 50%;
+  translate: -50% 0;
+  width: 1.25rem;
+  height: 3px;
+}
+
+/* ══════════════════════════════════════
+   PAGE HEADER
+══════════════════════════════════════ */
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-16);
+}
+.page-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+/* ══════════════════════════════════════
+   MENU / DROPDOWN
+   Anchored, glass, and sized so opening it never moves the page.
+══════════════════════════════════════ */
+.menu {
+  position: absolute;
+  z-index: var(--z-dropdown);
+  min-width: 18rem;
+  max-width: min(24rem, calc(100vw - var(--space-32)));
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-line);
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  box-shadow: var(--shadow-lg), var(--glass-inset);
+  transform-origin: top right;
+  animation: menu-in var(--dur-pop) var(--ease-enter) both;
+}
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+.menu[hidden] {
+  display: none;
+}
+
+.menu-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-8);
+  width: 100%;
+  text-align: left;
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-14);
+  color: var(--text-subtle);
+  transition: background-color var(--dur-fast) var(--ease-standard);
+}
+.menu-item:hover {
+  background: var(--surface-hovered);
+  color: var(--text);
+}
+
+.menu-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-12);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: var(--space-4);
+}
+
+/* ══════════════════════════════════════
+   MODAL
+══════════════════════════════════════ */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-scrim);
+  display: grid;
+  place-items: center;
+  padding: var(--space-16);
+  background: var(--scrim);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  animation: fade-in var(--dur-modal) var(--ease-enter) both;
+}
+.scrim[hidden] {
+  display: none;
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.modal {
+  position: relative;
+  z-index: var(--z-modal);
+  width: min(34rem, 100%);
+  max-height: calc(100dvh - var(--space-32));
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-overlay);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  animation: modal-in var(--dur-modal) var(--ease-decelerate) both;
+}
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+}
+.modal-wide {
+  width: min(56rem, 100%);
+}
+
+.modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-12);
+  padding: var(--space-20) var(--space-20) var(--space-12);
+}
+.modal-body {
+  padding: 0 var(--space-20) var(--space-20);
+  overflow-y: auto;
+}
+.modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-8);
+  padding: var(--space-16) var(--space-20);
+  border-top: 1px solid var(--line);
+}
+
+/* ══════════════════════════════════════
+   TOASTS
+   A live region, bottom-right, that never displaces content.
+══════════════════════════════════════ */
+.toast-region {
+  position: fixed;
+  z-index: var(--z-toast);
+  right: var(--space-16);
+  bottom: var(--space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  width: min(24rem, calc(100vw - var(--space-32)));
+  pointer-events: none;
+}
+@media (max-width: 1024px) {
+  .toast-region {
+    bottom: var(--space-80);
+  }
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-8);
+  padding: var(--space-12) var(--space-16);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface-overlay);
+  box-shadow: var(--shadow-lg);
+  font-size: var(--fs-14);
+  animation: toast-in var(--dur-pop) var(--ease-decelerate) both;
+}
+.toast svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex: none;
+  margin-top: 0.1em;
+}
+.toast-ok svg {
+  color: var(--ok-text);
+}
+.toast-risk svg {
+  color: var(--risk-text);
+}
+.toast-warn svg {
+  color: var(--warn-text);
+}
+.toast-info svg {
+  color: var(--info-text);
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.toast[data-leaving="true"] {
+  animation: toast-out var(--dur-state) var(--ease-exit) forwards;
+}
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+/* ══════════════════════════════════════
+   TABS
+══════════════════════════════════════ */
+.tabs {
+  display: flex;
+  gap: var(--space-4);
+  border-bottom: 1px solid var(--line);
+}
+.tab {
+  position: relative;
+  padding: var(--space-8) var(--space-12);
+  min-height: var(--hit-target);
+  font-size: var(--fs-14);
+  font-weight: var(--fw-medium);
+  color: var(--text-subtlest);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  transition: color var(--dur-fast) var(--ease-standard),
+    background-color var(--dur-fast) var(--ease-standard);
+}
+.tab:hover {
+  color: var(--text);
+  background: var(--surface-hovered);
+}
+.tab[aria-selected="true"] {
+  color: var(--text);
+  font-weight: var(--fw-semibold);
+}
+.tab[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 -1px 0;
+  height: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--action);
+}
+
+/* ══════════════════════════════════════
+   ENTRANCE
+   24ms per item, capped at eight. Past that a stagger stops
+   reading as sequence and starts reading as lag.
+══════════════════════════════════════ */
+.stagger > * {
+  animation: rise var(--dur-pop) var(--ease-decelerate) both;
+}
+.stagger > *:nth-child(1) { animation-delay: calc(var(--stagger) * 0); }
+.stagger > *:nth-child(2) { animation-delay: calc(var(--stagger) * 1); }
+.stagger > *:nth-child(3) { animation-delay: calc(var(--stagger) * 2); }
+.stagger > *:nth-child(4) { animation-delay: calc(var(--stagger) * 3); }
+.stagger > *:nth-child(5) { animation-delay: calc(var(--stagger) * 4); }
+.stagger > *:nth-child(6) { animation-delay: calc(var(--stagger) * 5); }
+.stagger > *:nth-child(7) { animation-delay: calc(var(--stagger) * 6); }
+.stagger > *:nth-child(n + 8) { animation-delay: calc(var(--stagger) * 7); }
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stagger > *,
+  .menu,
+  .modal,
+  .scrim,
+  .toast {
+    animation: none;
+  }
+}
+
+/* ══════════════════════════════════════
+   CHAPTER TRACKER
+   Five fixed stops — the chapters in Backend/src/utils/chapters.js
+   — and the thing the student actually stares at.
+
+   The states are the ones the API can produce and no others:
+
+     not-started    no submission for this chapter yet
+     under-review   latest version is "Under Review"
+     needs-revision latest version is "Needs Revision"
+     approved       latest version is "Approved"
+
+   There is deliberately no "locked" and no "draft": nothing in the
+   backend gates a chapter behind the one before it, and nothing
+   stores an unsubmitted draft. A stop that showed either would be
+   the interface telling the student something the system does not
+   know.
+
+   Every state carries a glyph and a word. Colour is reinforcement.
+══════════════════════════════════════ */
+.tracker {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-8);
+  counter-reset: stop;
+}
+@media (max-width: 760px) {
+  .tracker {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.tracker-stop {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-12);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  text-align: left;
+  transition: border-color var(--dur-state) var(--ease-standard),
+    background-color var(--dur-state) var(--ease-standard),
+    box-shadow var(--dur-fast) var(--ease-standard);
+}
+a.tracker-stop,
+button.tracker-stop {
+  cursor: pointer;
+}
+a.tracker-stop:hover,
+button.tracker-stop:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* The rail between stops. Drawn from the stop rather than as a
+   separate element, so it cannot fall out of sync with one. */
+.tracker-stop::after {
+  content: "";
+  position: absolute;
+  top: calc(var(--space-12) + 0.9rem);
+  left: 100%;
+  width: var(--space-8);
+  height: 2px;
+  background: var(--line);
+}
+.tracker-stop:last-child::after {
+  display: none;
+}
+@media (max-width: 760px) {
+  .tracker-stop::after {
+    display: none;
+  }
+}
+
+.tracker-mark {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--line);
+  background: var(--surface);
+  color: var(--text-subtlest);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+  flex: none;
+}
+.tracker-mark svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.tracker-name {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-semibold);
+  color: var(--text);
+  line-height: var(--lh-dense);
+}
+.tracker-title {
+  font-size: var(--fs-12);
+  color: var(--text-subtlest);
+  line-height: var(--lh-dense);
+}
+.tracker-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  font-size: var(--fs-12);
+  color: var(--text-subtlest);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── States ─────────────────────────────────────────── */
+.tracker-stop[data-state="approved"] {
+  border-color: var(--ok-border);
+  background: color-mix(in oklab, var(--ok-bg) 45%, var(--surface));
+}
+.tracker-stop[data-state="approved"] .tracker-mark {
+  border-color: var(--ok-bold);
+  background: var(--ok-bold);
+  color: var(--white);
+}
+.tracker-stop[data-state="approved"]::after {
+  background: var(--ok-border);
+}
+
+.tracker-stop[data-state="under-review"] {
+  border-color: var(--info-border);
+  background: color-mix(in oklab, var(--info-bg) 45%, var(--surface));
+}
+.tracker-stop[data-state="under-review"] .tracker-mark {
+  border-color: var(--info-bold);
+  color: var(--info-text);
+}
+
+.tracker-stop[data-state="needs-revision"] {
+  border-color: var(--warn-border);
+  background: color-mix(in oklab, var(--warn-bg) 45%, var(--surface));
+}
+.tracker-stop[data-state="needs-revision"] .tracker-mark {
+  border-color: var(--warn-bold);
+  color: var(--warn-text);
+}
+
+/* not-started keeps the default surface — an untouched chapter is
+   not a problem, and colouring it like one is how a dashboard
+   starts reading as five errors on day one. */
+
+/* Overdue is an overlay on any state, driven by the milestone
+   due_date the server sends, not by a client-side guess. */
+.tracker-stop[data-overdue="true"] .tracker-meta {
+  color: var(--risk-text);
+  font-weight: var(--fw-semibold);
+}
+
+/* ══════════════════════════════════════
+   TOUCH TARGETS
+   The dense variants — .btn-sm, .tab, the password reveal — sit
+   between 32 and 40px, which clears WCAG 2.2 SC 2.5.8 (24px) but
+   not the 44px floor this project sets. Rather than inflate every
+   dense control on desktop, they grow only where the pointer is
+   actually a finger.
+══════════════════════════════════════ */
+@media (pointer: coarse) {
+  .btn-sm,
+  .tab {
+    min-height: var(--hit-target);
+  }
+  .menu-item {
+    min-height: var(--hit-target);
+    align-items: center;
+  }
+}

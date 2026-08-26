@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Applies the saved light/dark choice before first paint -->
+  <script src="../../js/theme.js"></script>
   <title>OPSTS – Student Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <link rel="stylesheet" href="../../css/style.css" />
-  <link rel="stylesheet" href="../../css/dashboard.css" />
-  <link rel="stylesheet" href="../../css/student.css" />
+  <link rel="stylesheet" href="../../css/tailwind.css" />
 </head>
 <body>
 <div class="app-shell">
@@ -30,42 +30,42 @@
       </div>
     </div>
 
-    <nav class="sidebar-nav">
+    <nav class="sidebar-nav" aria-label="Primary">
       <div class="nav-section">Main</div>
-      <div class="nav-item active" data-page="dashboard.html">
+      <button type="button" class="nav-item active" data-page="dashboard.html" aria-current="page">
         <span class="nav-icon"><i class="fa-solid fa-house"></i></span>
         <span class="nav-label">Dashboard</span>
-      </div>
-      <div class="nav-item" data-page="submissions.html">
+      </button>
+      <button type="button" class="nav-item" data-page="submissions.html">
         <span class="nav-icon"><i class="fa-solid fa-upload"></i></span>
         <span class="nav-label">My Submissions</span>
-      </div>
-      <div class="nav-item" data-page="feedback.html">
+      </button>
+      <button type="button" class="nav-item" data-page="feedback.html">
         <span class="nav-icon"><i class="fa-solid fa-comments"></i></span>
         <span class="nav-label">Feedback</span>
         <span class="nav-badge hidden" id="fbBadge"></span>
-      </div>
-      <div class="nav-item" data-page="progress.html">
+      </button>
+      <button type="button" class="nav-item" data-page="progress.html">
         <span class="nav-icon"><i class="fa-solid fa-chart-line"></i></span>
         <span class="nav-label">Progress</span>
-      </div>
+      </button>
 
       <div class="nav-section">Communication</div>
-      <div class="nav-item" data-page="meetings.html">
+      <button type="button" class="nav-item" data-page="meetings.html">
         <span class="nav-icon"><i class="fa-solid fa-calendar-days"></i></span>
         <span class="nav-label">Meetings</span>
-      </div>
-      <div class="nav-item" data-page="notifications.html">
+      </button>
+      <button type="button" class="nav-item" data-page="notifications.html">
         <span class="nav-icon"><i class="fa-solid fa-bell"></i></span>
         <span class="nav-label">Notifications</span>
         <span class="nav-badge hidden" id="ntfBadge"></span>
-      </div>
+      </button>
 
       <div class="nav-section">Account</div>
-      <div class="nav-item" data-page="profile.html">
+      <button type="button" class="nav-item" data-page="profile.html">
         <span class="nav-icon"><i class="fa-solid fa-circle-user"></i></span>
         <span class="nav-label">My Profile</span>
-      </div>
+      </button>
     </nav>
 
     <div class="sidebar-footer">
@@ -74,7 +74,7 @@
   </aside>
 
   <!-- ═══════════════ MAIN ═══════════════ -->
-  <div class="main">
+  <div class="main" id="main-content" role="main" tabindex="-1">
 
     <!-- Topbar -->
     <div class="topbar">
@@ -85,11 +85,11 @@
         </div>
       </div>
       <div class="topbar-actions">
-        <button class="icon-btn" id="notifBtn" title="Notifications">
+        <button type="button" class="icon-btn" id="notifBtn" aria-label="Notifications">
           <i class="fa-solid fa-bell"></i>
           <span class="dot hidden" id="ntfDot"></span>
         </button>
-        <button class="icon-btn" id="profileBtn" title="Profile"><i class="fa-solid fa-circle-user"></i></button>
+        <button type="button" class="icon-btn" id="profileBtn" aria-label="My profile"><i class="fa-solid fa-circle-user"></i></button>
       </div>
     </div>
 
@@ -98,35 +98,35 @@
 
       <!-- Page Header -->
       <div class="page-header">
-        <h2>My Dashboard</h2>
+        <h1>My Dashboard</h1>
         <p>Overview of your project supervision progress.</p>
       </div>
 
       <!-- Stat Cards -->
-      <div class="stats-grid">
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-7">
         <div class="stat-card">
-          <div class="stat-icon" style="background: #e8f0fe;"><i class="fa-solid fa-chart-bar" style="color:#1a73e8;"></i></div>
+          <div class="stat-icon tint-blue"><i class="fa-solid fa-chart-bar"></i></div>
           <div class="stat-info">
             <div class="stat-val" id="statCompletion">–</div>
             <div class="stat-label">Project Completion</div>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon" style="background: #e6f4ea;"><i class="fa-solid fa-file-lines" style="color:#34a853;"></i></div>
+          <div class="stat-icon tint-green"><i class="fa-solid fa-file-lines"></i></div>
           <div class="stat-info">
             <div class="stat-val" id="statSubmissions">–</div>
             <div class="stat-label">Chapters Submitted</div>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon" style="background: #fff8e1;"><i class="fa-solid fa-comments" style="color:#b45309;"></i></div>
+          <div class="stat-icon tint-amber"><i class="fa-solid fa-comments"></i></div>
           <div class="stat-info">
             <div class="stat-val" id="statFeedback">–</div>
             <div class="stat-label">Feedback Received</div>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon" style="background: #fce8e6;"><i class="fa-solid fa-calendar-days" style="color:#c5221f;"></i></div>
+          <div class="stat-icon tint-rose"><i class="fa-solid fa-calendar-days"></i></div>
           <div class="stat-info">
             <div class="stat-val" id="statDays">–</div>
             <div class="stat-label">Days to Deadline</div>
@@ -135,12 +135,12 @@
       </div>
 
       <!-- Row 1: Project + Supervisor -->
-      <div class="grid-2 mb-lg">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
 
         <!-- Project Card -->
         <div class="card">
           <div class="card-header">
-            <h3><i class="fa-solid fa-folder-open"></i> My Project</h3>
+            <h2><i class="fa-solid fa-folder-open"></i> My Project</h2>
             <span class="badge badge-primary" id="projectStatusBadge"></span>
           </div>
           <div class="card-body">
@@ -163,7 +163,7 @@
         <!-- Supervisor Card -->
         <div class="card">
           <div class="card-header">
-            <h3><i class="fa-solid fa-chalkboard-user"></i> My Supervisor</h3>
+            <h2><i class="fa-solid fa-chalkboard-user"></i> My Supervisor</h2>
           </div>
           <div class="card-body">
             <div class="sup-strip">
@@ -184,12 +184,12 @@
       </div>
 
       <!-- Row 2: Recent Submissions + Upcoming Meetings -->
-      <div class="grid-2">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
         <!-- Recent Submissions -->
         <div class="card">
           <div class="card-header">
-            <h3><i class="fa-solid fa-upload"></i> Recent Submissions</h3>
+            <h2><i class="fa-solid fa-upload"></i> Recent Submissions</h2>
             <a href="submissions.html" class="btn btn-outline btn-sm">View All</a>
           </div>
           <div class="table-wrap">
@@ -209,7 +209,7 @@
         <!-- Upcoming Meetings -->
         <div class="card">
           <div class="card-header">
-            <h3><i class="fa-solid fa-calendar-days"></i> Upcoming Meetings</h3>
+            <h2><i class="fa-solid fa-calendar-days"></i> Upcoming Meetings</h2>
             <a href="meetings.html" class="btn btn-outline btn-sm">View All</a>
           </div>
           <div class="card-body" id="upcomingMeetingsList"></div>
@@ -227,6 +227,7 @@
 <script src="../../js/utils.js"></script>
 <script src="../../js/api.js"></script>
 <script src="../../js/app.js"></script>
+<script src="../../js/a11y.js"></script>
 <script src="../../js/notifications.js"></script>
 <script src="../../js/student.js"></script>
 </body>

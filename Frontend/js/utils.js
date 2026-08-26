@@ -8,6 +8,34 @@
 const Utils = {
 
   // ─────────────────────────────────────────
+  // AVATAR PALETTE
+  // ─────────────────────────────────────────
+
+  /**
+   * The colours initials-avatars are drawn from, picked to sit
+   * with the indigo/violet UI palette and to keep white initials
+   * legible on every entry.
+   *
+   * This is the single source of truth: app.js, student.js,
+   * supervisor.js and admin.js all read it. Each of them used to
+   * carry its own copy, which meant the same person could show up
+   * in a different colour depending on which portal you were in.
+   * Order matters — the index is derived from the initials, so
+   * reordering reassigns everybody's colour.
+   */
+  AVATAR_PALETTE: [
+    "#4f46e5", "#7c3aed", "#0284c7", "#0891b2",
+    "#059669", "#c2410c", "#dc2626", "#be185d",
+  ],
+
+  /** Deterministic colour for a set of initials. */
+  avatarColor(initials) {
+    const key = (initials && initials.length) ? initials : "?";
+    return this.AVATAR_PALETTE[key.charCodeAt(0) % this.AVATAR_PALETTE.length];
+  },
+
+
+  // ─────────────────────────────────────────
   // DATE & TIME
   // ─────────────────────────────────────────
 
@@ -211,11 +239,9 @@ const Utils = {
    * @param {string} bg       background color (optional)
    */
   avatar(initials, size = "40px", bg = null) {
-    const colors = ["#1a73e8","#34a853","#ea4335","#fbbc04",
-                    "#0d47a1","#00897b","#e65100","#6a1b9a"];
-    const col = bg || colors[initials.charCodeAt(0) % colors.length];
+    const col = bg || Utils.avatarColor(initials);
     return `<div class="avatar" style="width:${size};height:${size};background:${col};
-            border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+            display:inline-flex;align-items:center;justify-content:center;
             color:#fff;font-weight:700;font-size:calc(${size} * 0.38);flex-shrink:0;">
               ${initials}
             </div>`;
@@ -233,47 +259,37 @@ const Utils = {
    * @param {number} dur   Duration in ms (default 3500)
    */
   toast(msg, type = "info", dur = 3500) {
+    /* Prefer the shared implementation in app.js — it is the one
+       the portal pages use, so both routes look identical. This
+       body is the fallback for pages that never loaded app.js
+       (the login screen). */
+    if (typeof showToast === "function") return showToast(msg, type, dur);
+
     let container = document.getElementById("toast-container");
     if (!container) {
       container = document.createElement("div");
       container.id = "toast-container";
-      container.style.cssText = `
-        position:fixed; bottom:24px; right:24px; z-index:9999;
-        display:flex; flex-direction:column; gap:10px; pointer-events:none;`;
       document.body.appendChild(container);
     }
 
-    const icons = { success:"✅", error:"❌", warning:"⚠️", info:"ℹ️" };
-    const colors = {
-      success: "#e6f4ea", error: "#fce8e6",
-      warning: "#fff8e1", info:  "#e8f0fe"
-    };
-    const borders = {
-      success: "#34a853", error: "#ea4335",
-      warning: "#fbbc04", info:  "#1a73e8"
+    const icons = {
+      success: '<i class="fa-solid fa-circle-check"></i>',
+      error:   '<i class="fa-solid fa-circle-exclamation"></i>',
+      warning: '<i class="fa-solid fa-triangle-exclamation"></i>',
+      info:    '<i class="fa-solid fa-circle-info"></i>',
     };
 
+    /* Styling comes from .toast / .toast-* in dashboard.css rather
+       than inline hex, so the toast follows the active theme. */
     const t = document.createElement("div");
-    t.style.cssText = `
-      background:${colors[type]}; border-left:4px solid ${borders[type]};
-      padding:12px 18px; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,.15);
-      font-size:.88rem; color:#202124; max-width:320px; pointer-events:auto;
-      animation: slideIn .25s ease;`;
-    t.innerHTML = `${icons[type]} ${msg}`;
+    t.className = `toast toast-${type}`;
+    t.innerHTML = `${icons[type] || icons.info}<span>${msg}</span>`;
     container.appendChild(t);
 
-    // Add keyframe if not already added
-    if (!document.getElementById("toast-style")) {
-      const s = document.createElement("style");
-      s.id = "toast-style";
-      s.textContent = `@keyframes slideIn {
-        from { opacity:0; transform:translateX(40px); }
-        to   { opacity:1; transform:translateX(0); }
-      }`;
-      document.head.appendChild(s);
-    }
-
-    setTimeout(() => { t.style.opacity = "0"; t.style.transition = ".3s"; }, dur);
+    setTimeout(() => {
+      t.style.opacity   = "0";
+      t.style.transform = "translateX(48px) scale(0.94)";
+    }, dur);
     setTimeout(() => t.remove(), dur + 350);
   },
 

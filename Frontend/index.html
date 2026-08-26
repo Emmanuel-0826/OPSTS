@@ -1,211 +1,261 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OPSTS – Login</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/auth.css" />
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign in — OPSTS</title>
+    <meta
+      name="description"
+      content="Online Project Supervision & Tracking System — Ghana Communication Technology University."
+    />
 
-<div class="auth-page">
+    <!-- Before the stylesheet, so a dark-mode reload never flashes white. -->
+    <script src="js/theme.js"></script>
 
-  <!-- ═══════════════════════════════
-       LEFT BANNER
-  ═══════════════════════════════ -->
-  <div class="auth-banner">
-    <img src="assets/images/logo.png" alt="OPSTS Logo" class="banner-logo" />
-    <h1 class="banner-title">OPSTS</h1>
-    <p class="banner-subtitle">
-      Online Project Supervision &amp; Tracking System —
-      bridging students and supervisors seamlessly.
-    </p>
+    <link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="assets/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="css/tailwind.css" />
+    <link rel="icon" href="assets/images/logo.png" />
+  </head>
 
-    <ul class="banner-features">
-      <li>
-        <span class="feature-icon"><i class="fa-solid fa-upload"></i></span>
-        Submit project chapters &amp; revisions
-      </li>
-      <li>
-        <span class="feature-icon"><i class="fa-solid fa-comments"></i></span>
-        Receive real-time supervisor feedback
-      </li>
-      <li>
-        <span class="feature-icon"><i class="fa-solid fa-chart-bar"></i></span>
-        Track project milestones &amp; progress
-      </li>
-      <li>
-        <span class="feature-icon"><i class="fa-solid fa-calendar-days"></i></span>
-        Schedule &amp; manage supervision meetings
-      </li>
-      <li>
-        <span class="feature-icon"><i class="fa-solid fa-bell"></i></span>
-        Get deadline &amp; submission notifications
-      </li>
-    </ul>
-  </div>
+  <body data-auth-page="signin">
+    <a class="skip-link" href="#main-content">Skip to content</a>
 
-  <!-- ═══════════════════════════════
-       RIGHT AUTH PANEL
-  ═══════════════════════════════ -->
-  <div class="auth-panel">
-    <div class="auth-card">
-
-      <div class="auth-header">
-        <h2>Welcome Back</h2>
-        <p>Sign in to access your portal or create a new account.</p>
-      </div>
-
-      <!-- Tabs -->
-      <div class="auth-tabs">
-        <div class="auth-tab active" id="tab-login">Sign In</div>
-        <div class="auth-tab"        id="tab-register">Register</div>
-      </div>
-
-      <!-- Alert -->
-      <div class="auth-alert" id="authAlert"></div>
-
-      <!-- ═══════════════════════
-           SIGN IN FORM
-      ═══════════════════════ -->
-      <form class="auth-form active" id="loginForm" novalidate>
-
-        <div class="form-group">
-          <label>Select Your Role</label>
-          <div class="role-selector" id="loginRoleSelector">
-            <div class="role-option selected" data-role="student">
-              <span class="role-icon"><i class="fa-solid fa-user-graduate"></i></span>
-              <span class="role-label">Student</span>
-            </div>
-            <div class="role-option" data-role="supervisor">
-              <span class="role-icon"><i class="fa-solid fa-chalkboard-user"></i></span>
-              <span class="role-label">Supervisor</span>
-            </div>
-            <div class="role-option" data-role="admin">
-              <span class="role-icon"><i class="fa-solid fa-screwdriver-wrench"></i></span>
-              <span class="role-label">Admin</span>
-            </div>
+    <div class="auth">
+      <!-- ═══════════════════════════════════════
+           THE INSTITUTION
+      ═══════════════════════════════════════ -->
+      <aside class="auth-brand">
+        <div class="auth-lockup">
+          <img src="assets/images/logo.png" alt="" width="48" height="48" />
+          <div>
+            <div class="auth-wordmark">OPSTS</div>
+            <div class="auth-institution">Ghana Communication Technology University</div>
           </div>
         </div>
 
-        <div class="form-group">
-          <label for="loginEmail">Email Address</label>
-          <input
-            type="email"
-            id="loginEmail"
-            name="email"
-            placeholder="you@gmail.com"
-            required
-          />
+        <div class="auth-pitch">
+          <h1>Your project, your supervisor, one place.</h1>
+          <p>
+            Five chapters, every version kept, every piece of feedback attached to
+            the draft it belongs to.
+          </p>
         </div>
 
-        <div class="form-group">
-          <label for="loginPassword">Password</label>
-          <input
-            type="password"
-            id="loginPassword"
-            name="password"
-            placeholder="Enter your password"
-            required
-          />
-        </div>
+        <ul class="auth-points">
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 15.5V4.8M8 8.2L12 4.5l4 3.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.5 15v3a1.5 1.5 0 001.5 1.5h12A1.5 1.5 0 0019.5 18v-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            Submit a chapter and keep every earlier version
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4.5 5.5h15v11h-9l-4 3v-3h-2v-11z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+            Read supervisor feedback against the draft it was written on
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 20V10M10 20V4.5M16 20v-7M22 20H2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            Watch completion move as chapters are approved
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="15" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 10h17M8 3.5v4M16 3.5v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            Request and confirm supervision meetings
+          </li>
+        </ul>
 
-        <div class="form-meta">
-          <label>
-            <input type="checkbox" id="rememberMe" />
-            Remember me
-          </label>
-          <a href="#" id="forgotLink">Forgot password?</a>
-        </div>
+        <p class="auth-motto">Knowledge comes from learning.</p>
+      </aside>
 
-        <button type="submit" class="btn btn-primary btn-lg w-full">
-          <i class="fa-solid fa-right-to-bracket"></i> Sign In
-        </button>
+      <!-- ═══════════════════════════════════════
+           THE TASK
+      ═══════════════════════════════════════ -->
+      <main id="main-content" class="auth-panel">
+        <div class="auth-form-wrap auth-form-wrap-wide">
+          <div class="cluster cluster-between">
+            <p class="type-label">Project portal</p>
+            <button class="btn btn-ghost btn-sm" type="button" id="themeToggle">
+              Switch theme
+            </button>
+          </div>
 
-      </form>
+          <div class="auth-heading" id="authHeading">
+            <h2>Sign in</h2>
+            <p>Use the account your department registered you with.</p>
+          </div>
 
-      <!-- ═══════════════════════
-           REGISTER FORM
-      ═══════════════════════ -->
-      <form class="auth-form" id="registerForm" novalidate>
+          <div class="tabs" role="tablist" aria-label="Sign in or register">
+            <button
+              class="tab"
+              type="button"
+              role="tab"
+              data-panel="login"
+              id="tabLogin"
+              aria-selected="true"
+              aria-controls="loginForm"
+            >
+              Sign in
+            </button>
+            <button
+              class="tab"
+              type="button"
+              role="tab"
+              data-panel="register"
+              id="tabRegister"
+              aria-selected="false"
+              aria-controls="registerForm"
+            >
+              Register
+            </button>
+          </div>
 
-        <div class="form-group">
-          <label>Register As</label>
-          <div class="role-selector" id="registerRoleSelector">
-            <div class="role-option selected" data-role="student">
-              <span class="role-icon"><i class="fa-solid fa-user-graduate"></i></span>
-              <span class="role-label">Student</span>
+          <!-- The server's own sentence lands here, verbatim. -->
+          <div id="authMessage" role="alert" tabindex="-1" hidden></div>
+
+          <!-- ═══════════ SIGN IN ═══════════ -->
+          <form class="auth-form" id="loginForm" role="tabpanel" aria-labelledby="tabLogin" novalidate>
+            <fieldset class="field">
+              <legend class="field-label" id="loginRolesLabel">I am signing in as</legend>
+              <div class="role-grid" role="radiogroup" aria-labelledby="loginRolesLabel" id="loginRoles">
+                <button class="role-option" type="button" role="radio" aria-checked="true" data-value="student">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4L2.5 8.5 12 13l9.5-4.5L12 4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.5 10.7v4.6c0 1.4 2.5 2.7 5.5 2.7s5.5-1.3 5.5-2.7v-4.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  <span class="role-option-name">Student</span>
+                </button>
+                <button class="role-option" type="button" role="radio" aria-checked="false" data-value="supervisor">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.6"/><path d="M4.5 20a7.5 7.5 0 0115 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                  <span class="role-option-name">Supervisor</span>
+                </button>
+                <button class="role-option" type="button" role="radio" aria-checked="false" data-value="admin">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l7 2.6v5.2c0 4.3-2.9 8.2-7 9.2-4.1-1-7-4.9-7-9.2V5.6L12 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 12l2.2 2.2L15.5 10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  <span class="role-option-name">Administrator</span>
+                </button>
+              </div>
+            </fieldset>
+
+            <div class="field">
+              <label class="field-label field-required" for="loginEmail">Email address</label>
+              <input id="loginEmail" name="email" type="email" autocomplete="username" required />
             </div>
-            <div class="role-option" data-role="supervisor">
-              <span class="role-icon"><i class="fa-solid fa-chalkboard-user"></i></span>
-              <span class="role-label">Supervisor</span>
+
+            <div class="field">
+              <div class="cluster cluster-between" style="gap: var(--space-8)">
+                <label class="field-label field-required" for="loginPassword">Password</label>
+                <a class="type-body-s" href="forgot-password.html">Forgot your password?</a>
+              </div>
+              <div class="password-field">
+                <input
+                  id="loginPassword"
+                  name="password"
+                  type="password"
+                  autocomplete="current-password"
+                  required
+                />
+                <button class="password-reveal" type="button" aria-label="Show password"></button>
+              </div>
             </div>
-          </div>
+
+            <button class="btn btn-primary btn-block btn-lg" type="submit">Sign in</button>
+          </form>
+
+          <!-- ═══════════ REGISTER ═══════════ -->
+          <form class="auth-form" id="registerForm" role="tabpanel" aria-labelledby="tabRegister" novalidate hidden>
+            <fieldset class="field">
+              <legend class="field-label" id="registerRolesLabel">I am registering as</legend>
+              <div class="role-grid" role="radiogroup" aria-labelledby="registerRolesLabel" id="registerRoles">
+                <button class="role-option" type="button" role="radio" aria-checked="true" data-value="student">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4L2.5 8.5 12 13l9.5-4.5L12 4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.5 10.7v4.6c0 1.4 2.5 2.7 5.5 2.7s5.5-1.3 5.5-2.7v-4.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  <span class="role-option-name">Student</span>
+                </button>
+                <button class="role-option" type="button" role="radio" aria-checked="false" data-value="supervisor">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.6"/><path d="M4.5 20a7.5 7.5 0 0115 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                  <span class="role-option-name">Supervisor</span>
+                </button>
+              </div>
+              <p class="field-hint">
+                Administrator accounts are created by the university, not through
+                this form.
+              </p>
+            </fieldset>
+
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label field-required" for="firstName">First name</label>
+                <input id="firstName" name="firstName" autocomplete="given-name" required />
+              </div>
+              <div class="field">
+                <label class="field-label field-required" for="lastName">Last name</label>
+                <input id="lastName" name="lastName" autocomplete="family-name" required />
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label field-required" for="registerEmail">Email address</label>
+              <input id="registerEmail" name="email" type="email" autocomplete="email" required />
+              <p class="field-hint">Use your university address if you have one.</p>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label field-required" for="registerDepartment">Department</label>
+                <select id="registerDepartment" name="department" required>
+                  <option value="">Choose your department</option>
+                </select>
+              </div>
+
+              <div class="field" id="indexNumberField">
+                <label class="field-label field-required" for="indexNumber">Index number</label>
+                <input id="indexNumber" name="indexNumber" autocomplete="off" required />
+                <p class="field-hint">Letters, digits, hyphens and slashes only.</p>
+              </div>
+
+              <div class="field" id="staffIdField" hidden>
+                <label class="field-label field-required" for="staffId">Staff ID</label>
+                <input id="staffId" name="staffId" autocomplete="off" />
+                <p class="field-hint">Letters, digits, hyphens and slashes only.</p>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label field-required" for="registerPassword">Password</label>
+              <div class="password-field">
+                <input
+                  id="registerPassword"
+                  name="password"
+                  type="password"
+                  autocomplete="new-password"
+                  required
+                />
+                <button class="password-reveal" type="button" aria-label="Show password"></button>
+              </div>
+              <p class="password-rule" id="registerPasswordRule" data-met="false">
+                <span data-rule-icon></span>
+                At least 8 characters
+              </p>
+            </div>
+
+            <button class="btn btn-primary btn-block btn-lg" type="submit">
+              Create account
+            </button>
+
+            <p class="type-body-s text-subtlest">
+              Your account is reviewed by an administrator before you can sign in.
+              You will be told by email when that happens.
+            </p>
+          </form>
+
+          <p class="auth-foot type-body">
+            Trouble signing in? Contact your project coordinator.
+          </p>
         </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="regFirstName">First Name</label>
-            <input type="text" id="regFirstName" name="firstName" placeholder="John" required />
-          </div>
-          <div class="form-group">
-            <label for="regLastName">Last Name</label>
-            <input type="text" id="regLastName" name="lastName" placeholder="Doe" required />
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="regEmail">Email</label>
-          <input type="email" id="regEmail" name="email" placeholder="you@gmail.com" required />
-        </div>
-
-        <div class="form-group">
-          <label for="regId">Student / Staff ID</label>
-          <input type="text" id="regId" name="staffId" placeholder="e.g. 2425430001" required />
-        </div>
-
-        <div class="form-group">
-          <label for="regDept">Department</label>
-          <select id="regDept" name="department" required>
-            <option value="">Select department…</option>
-            <option value="cs">Computer Science</option>
-            <option value="it">Information Technology</option>
-            <option value="ce">Computer Engineering</option>
-            <option value="se">Software Engineering</option>
-            <option value="cy">Cybersecurity</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="regPassword">Password</label>
-          <input type="password" id="regPassword" name="password" placeholder="Create a password" required />
-        </div>
-
-        <div class="form-group">
-          <label for="regConfirm">Confirm Password</label>
-          <input type="password" id="regConfirm" name="confirm" placeholder="Repeat your password" required />
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-lg w-full">
-          <i class="fa-solid fa-user-plus"></i> Create Account
-        </button>
-
-      </form>
-
-      <div class="auth-footer">
-        &copy; 2025 OPSTS &mdash; University Project Supervision Portal
-      </div>
-
+      </main>
     </div>
-  </div>
-</div>
 
-<script src="js/data.js"></script>
-<script src="js/utils.js"></script>
-<script src="js/api.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/notifications.js"></script>
-</body>
+    <script src="js/config.js"></script>
+    <script src="js/session.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+      document
+        .getElementById("themeToggle")
+        .addEventListener("click", () => window.Theme.toggle());
+    </script>
+  </body>
 </html>

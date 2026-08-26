@@ -1,0 +1,444 @@
+/* ============================================================
+   src/auth.css — The signed-out screens
+   OPSTS — GCTU
+
+   Sign in, register, forgot password, reset password, change
+   password, and the pending-approval waiting room.
+
+   These are the only screens with no app shell around them, so
+   they carry their own layout. Everything else — buttons, fields,
+   messages — comes from components.css unchanged.
+============================================================ */
+
+/* ══════════════════════════════════════
+   SHELL
+   Two panels: the institution on the left, the task on the right.
+   The form never sits on the gradient — it sits on a solid
+   surface, because a person mistyping a password at 11pm should
+   not also be fighting a backdrop.
+══════════════════════════════════════ */
+.auth {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  min-height: 100dvh;
+}
+@media (max-width: 900px) {
+  .auth {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ── Brand panel ─────────────────────────────────────────
+   The single permitted gradient in the entire application, and
+   it is two steps of one hue rather than a mesh. */
+.auth-brand {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-40);
+  padding: var(--space-48);
+  color: var(--white);
+  background: linear-gradient(
+    160deg,
+    var(--navy-950) 0%,
+    var(--navy-800) 58%,
+    var(--crest-indigo) 100%
+  );
+  overflow: hidden;
+}
+@media (max-width: 900px) {
+  .auth-brand {
+    padding: var(--space-24);
+    gap: var(--space-24);
+  }
+}
+
+/* A single gold hairline where the two panels meet — the crest's
+   own ring, reduced to one line. */
+.auth-brand::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--gold-400) 35%,
+    var(--gold-400) 65%,
+    transparent
+  );
+  opacity: 0.5;
+}
+@media (max-width: 900px) {
+  .auth-brand::after {
+    inset: auto 0 0 0;
+    width: auto;
+    height: 2px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      var(--gold-400) 35%,
+      var(--gold-400) 65%,
+      transparent
+    );
+  }
+}
+
+.auth-lockup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+}
+.auth-lockup img {
+  width: 3rem;
+  height: 3rem;
+  object-fit: contain;
+  flex: none;
+}
+.auth-wordmark {
+  font-family: var(--ff-display);
+  font-size: var(--fs-25);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-heading);
+  line-height: 1;
+}
+.auth-institution {
+  font-size: var(--fs-12);
+  letter-spacing: var(--ls-caps);
+  text-transform: uppercase;
+  color: var(--gold-300);
+  line-height: 1.4;
+}
+
+.auth-pitch {
+  max-width: 34ch;
+}
+.auth-pitch h1 {
+  font-family: var(--ff-display);
+  font-size: var(--fs-display-2);
+  line-height: var(--lh-display);
+  letter-spacing: var(--ls-display);
+  color: var(--white);
+}
+.auth-pitch p {
+  margin-top: var(--space-12);
+  font-size: var(--fs-16);
+  line-height: var(--lh-body);
+  color: var(--navy-200);
+}
+@media (max-width: 900px) {
+  .auth-pitch {
+    display: none;
+  }
+}
+
+.auth-points {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  font-size: var(--fs-14);
+  color: var(--navy-100);
+}
+.auth-points li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-12);
+}
+.auth-points svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex: none;
+  margin-top: 0.15em;
+  color: var(--gold-400);
+}
+@media (max-width: 900px) {
+  .auth-points {
+    display: none;
+  }
+}
+
+.auth-motto {
+  font-family: var(--ff-display);
+  font-size: var(--fs-14);
+  font-style: italic;
+  color: var(--navy-300);
+}
+
+/* ── Form panel ──────────────────────────────────────── */
+.auth-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--space-48);
+  background: var(--surface);
+}
+@media (max-width: 900px) {
+  .auth-panel {
+    padding: var(--space-24) var(--space-16) var(--space-40);
+  }
+}
+
+.auth-form-wrap {
+  width: 100%;
+  max-width: 27rem;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+}
+.auth-form-wrap-wide {
+  max-width: 34rem;
+}
+
+.auth-heading h2 {
+  font-family: var(--ff-display);
+  font-size: var(--fs-31);
+  letter-spacing: var(--ls-display);
+}
+.auth-heading p {
+  margin-top: var(--space-6);
+  font-size: var(--fs-14);
+  color: var(--text-subtle);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+.auth-form[hidden] {
+  display: none;
+}
+
+.auth-foot {
+  font-size: var(--fs-14);
+  color: var(--text-subtle);
+}
+
+/* ══════════════════════════════════════
+   ROLE PICKER
+   A real radiogroup of real buttons. The role is a claim the
+   server checks, not a client-side switch — picking "Administrator"
+   here does not make anyone one.
+══════════════════════════════════════ */
+.role-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: var(--space-8);
+}
+
+.role-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-6);
+  padding: var(--space-12);
+  min-height: var(--hit-target);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  text-align: left;
+  transition: border-color var(--dur-fast) var(--ease-standard),
+    background-color var(--dur-fast) var(--ease-standard);
+}
+.role-option:hover {
+  border-color: var(--ink-300);
+  background: var(--surface-hovered);
+}
+.role-option svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--text-subtlest);
+}
+.role-option-name {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-semibold);
+  color: var(--text);
+}
+.role-option[aria-checked="true"] {
+  border-color: var(--border-selected);
+  background: var(--action-subtle);
+}
+.role-option[aria-checked="true"] svg {
+  color: var(--text-brand);
+}
+
+/* ══════════════════════════════════════
+   PASSWORD FIELD
+   The reveal control sits inside the field, and is a real button
+   with a real label that flips with the state.
+══════════════════════════════════════ */
+.password-field {
+  position: relative;
+}
+.password-field input {
+  padding-right: 3rem;
+}
+.password-reveal {
+  position: absolute;
+  right: var(--space-4);
+  top: 50%;
+  translate: 0 -50%;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-subtlest);
+  transition: color var(--dur-fast) var(--ease-standard),
+    background-color var(--dur-fast) var(--ease-standard);
+}
+.password-reveal:hover {
+  color: var(--text);
+  background: var(--surface-hovered);
+}
+.password-reveal svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+/* Length is the only rule the API enforces (8–128), so it is the
+   only rule shown. A meter inventing five more would be lying. */
+.password-rule {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  font-size: var(--fs-12);
+  color: var(--text-subtlest);
+}
+.password-rule svg {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex: none;
+}
+.password-rule[data-met="true"] {
+  color: var(--ok-text);
+}
+
+/* ══════════════════════════════════════
+   WAITING ROOM
+   A registered account that is not yet approved. This is not an
+   error and must not look like one: no red, no warning triangle,
+   no empty dashboard behind it. It is a page that explains what
+   is happening and who is doing it.
+══════════════════════════════════════ */
+.waiting {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-24);
+}
+
+.waiting-mark {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: var(--radius-lg);
+  background: var(--action-subtle);
+  color: var(--text-brand);
+}
+.waiting-mark svg {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+/* Three steps, with the current one marked. The point is to show
+   that the account is somewhere in a process rather than stuck. */
+.waiting-steps {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.waiting-step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-12);
+  padding: var(--space-12);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+}
+.waiting-step-mark {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: none;
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--line);
+  color: var(--text-subtlest);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}
+.waiting-step-mark svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+.waiting-step-name {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-semibold);
+  color: var(--text);
+}
+.waiting-step-note {
+  font-size: var(--fs-12);
+  color: var(--text-subtlest);
+  line-height: var(--lh-dense);
+}
+
+.waiting-step[data-state="done"] .waiting-step-mark {
+  border-color: var(--ok-bold);
+  background: var(--ok-bold);
+  color: var(--white);
+}
+.waiting-step[data-state="current"] {
+  border-color: var(--border-selected);
+  background: var(--action-subtle);
+}
+.waiting-step[data-state="current"] .waiting-step-mark {
+  border-color: var(--action);
+  color: var(--text-brand);
+}
+.waiting-step[data-state="todo"] .waiting-step-name {
+  color: var(--text-subtlest);
+  font-weight: var(--fw-medium);
+}
+
+/* The dot that shows the page is still checking, without a
+   spinner implying anything is loading right now. */
+.waiting-pulse {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--action);
+  animation: waiting-pulse 2s var(--ease-standard) infinite;
+}
+@keyframes waiting-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .waiting-pulse {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* The reveal control is 40px, and auth.css is imported after
+   components.css — so the shared coarse-pointer rule there loses to
+   the declaration above on equal specificity. It has to be restated
+   here to take effect. */
+@media (pointer: coarse) {
+  .password-reveal {
+    width: var(--hit-target);
+    height: var(--hit-target);
+  }
+}

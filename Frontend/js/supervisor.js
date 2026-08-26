@@ -12,8 +12,9 @@
    HELPERS
 ══════════════════════════════════════ */
 function avatarColor(initials) {
-  var palette = ["#1a73e8","#34a853","#ea4335","#fbbc04","#0d47a1","#00897b","#e65100","#6a1b9a"];
-  return palette[initials.charCodeAt(0) % palette.length];
+  /* Delegates to Utils so every portal colours a given set of
+     initials identically (see Utils.AVATAR_PALETTE). */
+  return Utils.avatarColor(initials);
 }
 
 function badge(status) {
@@ -217,7 +218,7 @@ async function initStudents(user) {
         '<div class="student-card-actions">' +
         '<a href="review.html"   class="btn btn-outline btn-sm"><i class="fa-solid fa-pen-to-square"></i> Review</a>' +
         '<a href="schedule.html" class="btn btn-outline btn-sm"><i class="fa-solid fa-calendar-days"></i> Meeting</a>' +
-        '<a href="progress.html" class="btn btn-ghost   btn-sm"><i class="fa-solid fa-chart-bar"></i> Progress</a>' +
+        '<a href="progress.html" class="btn btn-ghost btn-sm"><i class="fa-solid fa-chart-bar"></i> Progress</a>' +
         "</div></div>";
     }).join("");
   } catch (err) {

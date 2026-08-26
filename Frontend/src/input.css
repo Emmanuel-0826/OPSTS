@@ -1,0 +1,36 @@
+/* ============================================================
+   src/input.css — Tailwind entry point
+   OPSTS – Online Project Supervision & Tracking System
+
+   Build:   npm run build   (one-off, minified → css/tailwind.css)
+   Watch:   npm run dev     (rebuilds on save)
+
+   css/tailwind.css is the ONLY stylesheet the pages link, and it
+   is committed to the repo on purpose: the app is served as plain
+   static files, so a clone with no Node toolchain still renders
+   correctly. Re-run the build after editing anything in src/.
+
+   Load order is deliberate:
+     tailwindcss  → sets up the theme/base/components/utilities layers
+     tokens       → runtime CSS variables + @theme inline mapping
+     base         → element defaults (forms, tables, focus, page wash)
+     components   → the .card / .btn / .nav-item component classes
+============================================================ */
+
+/* source(none) switches OFF automatic file detection so the three
+   globs below are the ONLY inputs. Without it Tailwind also sweeps
+   the project root and picks up prose — the class names in this
+   folder's README code samples were being compiled into real
+   utilities, which made the build vary with the documentation. */
+@import "tailwindcss" source(none);
+
+@import "./tokens.css";
+@import "./base.css";
+@import "./components.css";
+@import "./auth.css";
+
+/* The portal scripts build their markup as strings, so a good half
+   of the class names in this app exist only inside js/*.js. */
+@source "../*.html";
+@source "../pages/**/*.html";
+@source "../js/**/*.js";

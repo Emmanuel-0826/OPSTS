@@ -13,11 +13,9 @@
    HELPERS
 ══════════════════════════════════════ */
 function getAvatarColor(initials) {
-  var palette = [
-    "#1a73e8", "#34a853", "#ea4335", "#fbbc04",
-    "#0d47a1", "#00897b", "#e65100", "#6a1b9a"
-  ];
-  return palette[initials.charCodeAt(0) % palette.length];
+  /* Delegates to Utils so every portal colours a given set of
+     initials identically (see Utils.AVATAR_PALETTE). */
+  return Utils.avatarColor(initials);
 }
 
 function badge(status) {
@@ -153,7 +151,7 @@ async function initDashboard(user) {
   if (tbody) {
     var recent = subs.slice(-3).reverse();
     tbody.innerHTML = recent.length === 0
-      ? '<tr><td colspan="3" class="text-center text-muted">No submissions yet.</td></tr>'
+      ? '<tr><td colspan="3" class="text-center text-gray-600">No submissions yet.</td></tr>'
       : recent.map(function (s) {
           var ch = DB.getChapterById(s.chapterId);
           return "<tr>" +
@@ -199,7 +197,7 @@ async function initSubmissions(user) {
   function renderHistory(subs) {
     if (!tbody) return;
     if (subs.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No submissions yet.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-600">No submissions yet.</td></tr>';
       return;
     }
     tbody.innerHTML = subs.map(function (s) {
@@ -386,12 +384,12 @@ async function initProgress(user) {
 
     if (tlEl) {
       if (!project) {
-        tlEl.innerHTML = '<p class="text-muted text-sm">No project assigned yet.</p>';
+        tlEl.innerHTML = '<p class="text-gray-600 text-sm">No project assigned yet.</p>';
       } else {
         var msRes = await Api.get("/projects/milestones/" + project.id);
         var milestones = msRes.milestones || [];
         tlEl.innerHTML = milestones.length === 0
-          ? '<p class="text-muted text-sm">No milestones set yet.</p>'
+          ? '<p class="text-gray-600 text-sm">No milestones set yet.</p>'
           : milestones.map(function (ms) {
               var dotClass = ms.status === "Completed" ? "done" : ms.status === "In Progress" ? "active" : "pending";
               return '<div class="tl-item">' +

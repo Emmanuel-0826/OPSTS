@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Waiting for approval — OPSTS</title>
+    <script src="js/theme.js"></script>
+    <link rel="preload" href="assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="assets/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="css/tailwind.css" />
+    <link rel="icon" href="assets/images/logo.png" />
+  </head>
+
+  <!--
+    The waiting room.
+
+    An account exists, it is correct, and it is not approved yet. That is
+    a normal state in this system, not a failure — so there is no red on
+    this page, no warning triangle, and nothing the reader is being asked
+    to fix. It says what has happened, who acts next, and how they will
+    know it is done.
+  -->
+  <body data-auth-page="pending">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+
+    <div class="auth">
+      <aside class="auth-brand">
+        <div class="auth-lockup">
+          <img src="assets/images/logo.png" alt="" width="48" height="48" />
+          <div>
+            <div class="auth-wordmark">OPSTS</div>
+            <div class="auth-institution">Ghana Communication Technology University</div>
+          </div>
+        </div>
+
+        <div class="auth-pitch">
+          <h1>Nothing is wrong.</h1>
+          <p>
+            Every account is checked by a person before it can see student work.
+            Yours is in that queue.
+          </p>
+        </div>
+
+        <p class="auth-motto">Knowledge comes from learning.</p>
+      </aside>
+
+      <main id="main-content" class="auth-panel">
+        <div class="auth-form-wrap waiting">
+          <div class="waiting-mark">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.6"/><path d="M12 7v5.3l3.2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+
+          <div class="auth-heading">
+            <h2 id="pendingHeading">Your account is waiting for approval</h2>
+            <p>
+              An administrator reviews new registrations, usually within a working
+              day. You do not need to do anything until then.
+            </p>
+          </div>
+
+          <div id="authMessage" role="status" tabindex="-1" hidden></div>
+
+          <div class="card" id="pendingIdentity" hidden>
+            <p class="type-label">Registered as</p>
+            <p class="type-heading-xs" id="pendingEmail"></p>
+            <p class="type-body-s text-subtlest" id="pendingRole"></p>
+          </div>
+
+          <ol class="waiting-steps">
+            <li class="waiting-step" data-state="done">
+              <span class="waiting-step-mark" aria-hidden="true">
+                <svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              <span>
+                <span class="waiting-step-name">Account created</span>
+                <span class="waiting-step-note">Your details are saved and your password is set.</span>
+              </span>
+            </li>
+
+            <li class="waiting-step" data-state="current" aria-current="step">
+              <span class="waiting-step-mark" aria-hidden="true">2</span>
+              <span>
+                <span class="waiting-step-name">
+                  Administrator approval <span class="waiting-pulse" aria-hidden="true"></span>
+                </span>
+                <span class="waiting-step-note">
+                  A project coordinator confirms you belong to the programme. You
+                  will get an email the moment it happens.
+                </span>
+              </span>
+            </li>
+
+            <li class="waiting-step" data-state="todo">
+              <span class="waiting-step-mark" aria-hidden="true">3</span>
+              <span>
+                <span class="waiting-step-name">Sign in and start</span>
+                <span class="waiting-step-note">
+                  Students are then assigned a supervisor, which unlocks chapter
+                  submissions.
+                </span>
+              </span>
+            </li>
+          </ol>
+
+          <div class="cluster">
+            <a class="btn btn-primary" href="index.html">Try signing in</a>
+            <button class="btn btn-ghost" type="button" id="pendingSignOut">
+              Use a different account
+            </button>
+          </div>
+
+          <p class="auth-foot type-body-s">
+            Waiting longer than a day? Email your project coordinator with your
+            index number or staff ID — approvals stall when a name cannot be
+            matched to the programme roll.
+          </p>
+        </div>
+      </main>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/session.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/auth.js"></script>
+  </body>
+</html>

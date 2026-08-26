@@ -18,8 +18,9 @@
    SHARED HELPERS
 ══════════════════════════════════════ */
 function avatarColor(initials) {
-  var palette = ["#1a73e8","#34a853","#ea4335","#fbbc04","#0d47a1","#00897b","#e65100","#6a1b9a"];
-  return palette[initials.charCodeAt(0) % palette.length];
+  /* Delegates to Utils so every portal colours a given set of
+     initials identically (see Utils.AVATAR_PALETTE). */
+  return Utils.avatarColor(initials);
 }
 
 function badge(status) {
@@ -189,7 +190,7 @@ async function initUsers(user) {
       renderUsers();
     } catch (err) {
       apiErrorToast(err, "Could not load users.");
-      if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:32px;">Failed to load users.</td></tr>';
+      if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-600" style="padding:32px;">Failed to load users.</td></tr>';
     }
   }
 
@@ -198,7 +199,7 @@ async function initUsers(user) {
     if (!tbody) return;
 
     if (allUsers.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:32px;">No users found.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-600" style="padding:32px;">No users found.</td></tr>';
       return;
     }
 
@@ -331,7 +332,7 @@ async function initProjects() {
       renderProjects();
     } catch (err) {
       apiErrorToast(err, "Could not load projects.");
-      if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted" style="padding:32px;">Failed to load projects.</td></tr>';
+      if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="text-center text-gray-600" style="padding:32px;">Failed to load projects.</td></tr>';
     }
   }
 
@@ -348,7 +349,7 @@ async function initProjects() {
     });
 
     if (filtered.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted" style="padding:32px;">No projects found.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center text-gray-600" style="padding:32px;">No projects found.</td></tr>';
       return;
     }
 
@@ -578,7 +579,7 @@ async function initReports() {
     var compTbody = document.getElementById("reportCompletionTable");
     if (compTbody) {
       compTbody.innerHTML = completion.length === 0
-        ? '<tr><td colspan="3" class="text-center text-muted" style="padding:24px;">No projects yet.</td></tr>'
+        ? '<tr><td colspan="3" class="text-center text-gray-600" style="padding:24px;">No projects yet.</td></tr>'
         : completion.map(function (c) {
             return "<tr><td>" + badge(c.status) + "</td><td>" + c.count + "</td><td>" + c.percent + "%</td></tr>";
           }).join("");
@@ -587,7 +588,7 @@ async function initReports() {
     var projTbody = document.getElementById("reportProjectTable");
     if (projTbody) {
       projTbody.innerHTML = projects.length === 0
-        ? '<tr><td colspan="6" class="text-center text-muted" style="padding:24px;">No projects yet.</td></tr>'
+        ? '<tr><td colspan="6" class="text-center text-gray-600" style="padding:24px;">No projects yet.</td></tr>'
         : projects.map(function (p) {
             return "<tr><td>" + p.studentName + "</td><td>" + Utils.truncate(p.title, 50) + "</td><td>" + p.supervisorName + "</td>" +
               "<td><div style='display:flex;align-items:center;gap:8px;'><div class='progress-track' style='width:100px;'>" +
@@ -600,7 +601,7 @@ async function initReports() {
     var wlTbody = document.getElementById("reportWorkloadTable");
     if (wlTbody) {
       wlTbody.innerHTML = workload.length === 0
-        ? '<tr><td colspan="5" class="text-center text-muted" style="padding:24px;">No supervisors yet.</td></tr>'
+        ? '<tr><td colspan="5" class="text-center text-gray-600" style="padding:24px;">No supervisors yet.</td></tr>'
         : workload.map(function (w) {
             return "<tr><td><div style='display:flex;align-items:center;gap:8px;'>" + makeAvatar(w.name, "28px", "0.65rem") + w.name + "</div></td>" +
               "<td>" + w.department + "</td><td>" + w.studentsAssigned + "</td>" +

@@ -33,11 +33,9 @@ function requireAuth(expectedRole) {
    AVATAR COLOUR HELPER
 ══════════════════════════════════════ */
 function avatarColor(initials) {
-  var palette = [
-    "#1a73e8", "#34a853", "#ea4335", "#fbbc04",
-    "#0d47a1", "#00897b", "#e65100", "#6a1b9a"
-  ];
-  return palette[initials.charCodeAt(0) % palette.length];
+  /* Delegates to Utils so every portal colours a given set of
+     initials identically (see Utils.AVATAR_PALETTE). */
+  return Utils.avatarColor(initials);
 }
 
 /* ══════════════════════════════════════
@@ -133,6 +131,13 @@ function initLogout() {
    Uses innerHTML (not textContent) since many callers pass
    Font Awesome icon markup inside the message string.
 ══════════════════════════════════════ */
+var TOAST_ICONS = {
+  success: '<i class="fa-solid fa-circle-check"></i>',
+  error:   '<i class="fa-solid fa-circle-exclamation"></i>',
+  warning: '<i class="fa-solid fa-triangle-exclamation"></i>',
+  info:    '<i class="fa-solid fa-circle-info"></i>',
+};
+
 function showToast(message, type, duration) {
   type     = type     || "info";
   duration = duration || 3500;
@@ -142,10 +147,18 @@ function showToast(message, type, duration) {
 
   var toast = document.createElement("div");
   toast.className = "toast toast-" + type;
-  toast.innerHTML = message;
+
+  /* Lead with a status icon, but only when the caller has not
+     already supplied one of their own inside the message. */
+  var leadIcon = message.indexOf("<i ") === -1 ? (TOAST_ICONS[type] || "") : "";
+  toast.innerHTML = leadIcon + "<span>" + message + "</span>";
+
   container.appendChild(toast);
 
-  setTimeout(function () { toast.style.opacity = "0"; }, duration);
+  setTimeout(function () {
+    toast.style.opacity   = "0";
+    toast.style.transform = "translateX(48px) scale(0.94)";
+  }, duration);
   setTimeout(function () {
     if (toast.parentNode) toast.parentNode.removeChild(toast);
   }, duration + 350);
@@ -202,11 +215,181 @@ function initSidebarToggle() {
 
   function applyState(isCollapsed) {
     sidebar.classList.toggle("collapsed", isCollapsed);
-    document.documentElement.style.setProperty("--sidebar-width", isCollapsed ? "68px" : "250px");
+
+    /* Expanded is whatever --sidebar-width is defined as in
+       style.css — clear the override rather than restating the
+       number here, so the two cannot drift apart. */
+    if (isCollapsed) {
+      document.documentElement.style.setProperty("--sidebar-width", "76px");
+    } else {
+      document.documentElement.style.removeProperty("--sidebar-width");
+    }
+
     toggleBtn.innerHTML = isCollapsed
       ? '<i class="fa-solid fa-angles-right"></i>'
       : '<i class="fa-solid fa-angles-left"></i>';
   }
+}
+
+/* ══════════════════════════════════════
+   MOBILE NAVIGATION
+   Below 768px the sidebar is translated off-screen by the
+   stylesheet. Until now nothing could bring it back, so the whole
+   nav was unreachable on a phone. This injects a hamburger into
+   the topbar plus a tap-away scrim — no page markup required.
+══════════════════════════════════════ */
+function initMobileNav() {
+  var sidebar = document.querySelector(".sidebar");
+  var left    = document.querySelector(".topbar-left");
+  if (!sidebar || !left || left.querySelector(".mobile-nav-btn")) return;
+
+  var burger = document.createElement("button");
+  burger.type = "button";
+  burger.className = "mobile-nav-btn";
+  burger.title = "Menu";
+  burger.setAttribute("aria-label", "Open navigation");
+  burger.innerHTML = '<i class="fa-solid fa-bars"></i>';
+  left.insertBefore(burger, left.firstChild);
+
+  var scrim = document.createElement("div");
+  scrim.className = "sidebar-scrim";
+  document.body.appendChild(scrim);
+
+  function close() {
+    sidebar.classList.remove("mobile-open");
+    scrim.classList.remove("show");
+  }
+
+  burger.addEventListener("click", function (e) {
+    e.stopPropagation();
+    var opening = !sidebar.classList.contains("mobile-open");
+    sidebar.classList.toggle("mobile-open", opening);
+    scrim.classList.toggle("show", opening);
+  });
+
+  scrim.addEventListener("click", close);
+
+  /* Tapping a destination should dismiss the drawer, not leave it
+     hanging over the page while the next one loads. */
+  sidebar.querySelectorAll(".nav-item").forEach(function (item) {
+    item.addEventListener("click", close);
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") close();
+  });
+}
+
+/* ══════════════════════════════════════
+   ENTRANCE CHOREOGRAPHY
+   Fades the page's top-level blocks in with a short stagger so a
+   dashboard assembles itself instead of appearing all at once.
+══════════════════════════════════════ */
+function initReveal() {
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  var content = document.querySelector(".page-content");
+  if (!content) return;
+
+  var blocks = content.children;
+  for (var i = 0; i < blocks.length; i++) {
+    blocks[i].style.setProperty("--reveal-delay", (i * 70) + "ms");
+    blocks[i].classList.add("reveal");
+  }
+}
+
+/* ══════════════════════════════════════
+   ANIMATED STAT COUNTERS
+   The portal scripts fill .stat-val asynchronously once their API
+   calls land. Rather than ask every one of them to animate, watch
+   the elements and roll the number up whenever it changes.
+
+   Non-numeric values ("–", "N/A") are left exactly as written.
+══════════════════════════════════════ */
+function initStatCounters() {
+  var cells = document.querySelectorAll(".stat-val");
+  if (!cells.length || typeof MutationObserver === "undefined") return;
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  var NUMERIC = /^(-?\d+(?:\.\d+)?)(\D*)$/;
+
+  /* Every write below re-enters the observer. The guard has to stay
+     set for the whole animation, not just the instant of the write,
+     because MutationObserver callbacks are delivered asynchronously
+     — a flag cleared on the same tick is always gone by the time
+     the callback actually runs, and each frame would then kick off
+     a fresh roll of its own. A WeakSet keeps that state off the DOM. */
+  var rolling = new WeakSet();
+
+  function rollTo(el, target, suffix, decimals) {
+    var from     = 0;
+    var start    = null;
+    var duration = 900;
+    var settled  = false;
+    var final    = target.toFixed(decimals) + suffix;
+
+    rolling.add(el);
+
+    /* Safety net. requestAnimationFrame does not fire while the tab
+       is in the background, so a dashboard opened in a background
+       tab would otherwise freeze mid-count and leave a partial
+       number on screen for good. Timers still run there, so this
+       guarantees the cell ends up showing the real value. */
+    var failsafe = setTimeout(function () { finish(); }, duration + 600);
+
+    function finish() {
+      if (settled) return;
+      settled = true;
+      clearTimeout(failsafe);
+      el.textContent = final;
+      /* Release only after the observer has drained this last
+         write, or it would read it as a fresh value and restart. */
+      setTimeout(function () { rolling.delete(el); }, 0);
+    }
+
+    function step(now) {
+      if (settled) return;
+
+      if (start === null) start = now;
+      var t = Math.min((now - start) / duration, 1);
+
+      if (t >= 1) { finish(); return; }
+
+      var eased = 1 - Math.pow(1 - t, 3); /* ease-out cubic */
+      el.textContent = (from + (target - from) * eased).toFixed(decimals) + suffix;
+      requestAnimationFrame(step);
+    }
+
+    requestAnimationFrame(step);
+  }
+
+  var observer = new MutationObserver(function (records) {
+    records.forEach(function (record) {
+      var el = record.target.nodeType === 3 ? record.target.parentNode : record.target;
+      if (!el || !el.classList || !el.classList.contains("stat-val")) return;
+      if (rolling.has(el)) return; /* our own frame-by-frame writes */
+
+      var text = (el.textContent || "").trim();
+      if (el.dataset.counted === text) return;
+
+      var match = NUMERIC.exec(text);
+      if (!match) {
+        delete el.dataset.counted; /* "–" while loading, then a real number */
+        return;
+      }
+
+      var target   = parseFloat(match[1]);
+      var suffix   = match[2] || "";
+      var decimals = (match[1].split(".")[1] || "").length;
+
+      el.dataset.counted = text;
+      rollTo(el, target, suffix, decimals);
+    });
+  });
+
+  cells.forEach(function (cell) {
+    observer.observe(cell, { childList: true, characterData: true, subtree: true });
+  });
 }
 
 /* ══════════════════════════════════════
@@ -255,6 +438,9 @@ function initApp(expectedRole) {
   initLogout();
   initModalBackdrops();
   initSidebarToggle();
+  initMobileNav();
+  initReveal();
+  initStatCounters();
   warnIfDefaultPassword(user);
 
   /* Real-time notifications: fetches unread count + list from the

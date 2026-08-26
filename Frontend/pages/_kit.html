@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OPSTS design kit — tokens &amp; primitives</title>
+    <meta name="robots" content="noindex" />
+
+    <!-- Theme before first paint, so a dark-mode reload never flashes white. -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("opsts-theme");
+          if (t === "dark" || t === "light")
+            document.documentElement.setAttribute("data-theme", t);
+        } catch (e) {}
+      })();
+    </script>
+
+    <link rel="preload" href="../assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="../assets/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="../css/tailwind.css" />
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+
+    <header class="app-topbar" id="topbar">
+      <div class="cluster cluster-8">
+        <img src="../assets/images/logo.png" alt="" width="28" height="28" style="object-fit: contain" />
+        <div>
+          <div class="nav-brand-name">OPSTS design kit</div>
+          <div class="nav-brand-sub">Tokens and primitives — stage 2</div>
+        </div>
+      </div>
+      <div class="cluster cluster-8" style="margin-left: auto">
+        <button class="btn btn-secondary btn-sm" id="themeToggle" type="button">
+          Toggle theme
+        </button>
+      </div>
+    </header>
+
+    <main id="main-content" class="app-content stack-32" style="padding-block: 2rem">
+      <!-- ══════════════ TYPE ══════════════ -->
+      <section class="stack">
+        <p class="type-label">Typography</p>
+        <h1 class="type-display-1">Where do I stand, and what do I do next?</h1>
+        <p class="type-body-l text-subtle">
+          Fraunces sets the display and headings; Inter sets everything a person
+          has to read carefully, with <code>cv05</code> and <code>cv08</code> on so
+          that 1, l and I stay apart in an index number like 04220231D. Numerals
+          are tabular wherever they sit in a column.
+        </p>
+
+        <div class="card stack">
+          <div><span class="type-label">display-1 · Fraunces 49/1.15</span><div class="type-display-1">Chapter 3 — Methodology</div></div>
+          <div><span class="type-label">display-2 · Fraunces 39/1.15</span><div class="type-display-2">Chapter 3 — Methodology</div></div>
+          <div><span class="type-label">heading-l · Fraunces 31/1.3</span><div class="type-heading-l">Chapter 3 — Methodology</div></div>
+          <div><span class="type-label">heading-m · Fraunces 25/1.3</span><div class="type-heading-m">Chapter 3 — Methodology</div></div>
+          <div><span class="type-label">heading-s · Fraunces 20/1.3</span><div class="type-heading-s">Chapter 3 — Methodology</div></div>
+          <div><span class="type-label">heading-xs · Inter 16/1.3 600</span><div class="type-heading-xs">Chapter 3 — Methodology</div></div>
+          <div><span class="type-label">body-l · Inter 16/1.55, 68ch</span><div class="type-body-l">Your supervisor has asked for revisions to the methodology chapter. Address the comments below and upload a new version — it becomes version 3, and version 2 stays in the history.</div></div>
+          <div><span class="type-label">body · Inter 14/1.55</span><div class="type-body text-subtle">Submitted 14 August 2026 at 09:42 · 2.4 MB · PDF</div></div>
+          <div><span class="type-label">metric-l · Inter 39, tabular</span><div class="type-metric-l">40%</div></div>
+        </div>
+      </section>
+
+      <!-- ══════════════ COLOUR ══════════════ -->
+      <section class="stack">
+        <p class="type-label">Colour — extracted from GCTU, not invented</p>
+        <div class="card stack">
+          <p class="type-body text-subtle measure">
+            Four navy steps are the university's literal values, taken from the
+            inline theme CSS on site.gctu.edu.gh and from the crest PNG. The rest
+            of the ramp is interpolated in OKLCH along hue 264 — the hue GCTU's
+            own hero and section grounds already use.
+          </p>
+          <div id="ramp-navy" class="swatches"></div>
+          <p class="type-body text-subtle measure">
+            Gold is accent only. gold-400 <strong>is</strong> the university's
+            #ffc600 — the value its own site uses for buttons and, tellingly, for
+            its focus outline. Only gold-700 carries text on white.
+          </p>
+          <div id="ramp-gold" class="swatches"></div>
+          <p class="type-body text-subtle measure">Neutrals are blue-cast at the same hue so they belong to the palette.</p>
+          <div id="ramp-ink" class="swatches"></div>
+        </div>
+      </section>
+
+      <!-- ══════════════ STATUS ══════════════ -->
+      <section class="stack">
+        <p class="type-label">Status — never colour alone</p>
+        <div class="card stack">
+          <p class="type-body text-subtle measure">
+            Every lozenge carries a word and a glyph. These are the only statuses
+            the API can return, so these are the only lozenges that exist.
+          </p>
+          <div class="cluster">
+            <span class="lozenge lozenge-ok">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Approved
+            </span>
+            <span class="lozenge lozenge-info">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2"/><path d="M8 5v3.4l2.2 1.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              Under review
+            </span>
+            <span class="lozenge lozenge-warn">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.2 9.6a5 5 0 108-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M11.6 2.4v3.2H8.4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Needs revision
+            </span>
+            <span class="lozenge lozenge-risk">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2.8L14.4 13.2H1.6L8 2.8z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 6.6v2.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="8" cy="11.2" r="0.9" fill="currentColor"/></svg>
+              Overdue
+            </span>
+            <span class="lozenge lozenge-neutral">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="5.6" stroke="currentColor" stroke-width="1.8" stroke-dasharray="2.6 2.4"/></svg>
+              Not started
+            </span>
+            <span class="lozenge lozenge-bold lozenge-info">4 awaiting review</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════ CHAPTER TRACKER ══════════════ -->
+      <section class="stack">
+        <p class="type-label">Chapter tracker — the component the student stares at</p>
+        <div class="card stack">
+          <div class="cluster cluster-between">
+            <div>
+              <div class="type-label">Completion</div>
+              <div class="type-metric-l" id="pct" data-metric>0%</div>
+            </div>
+            <p class="type-body text-subtlest" style="max-width: 34ch; text-align: right">
+              2 of 5 chapters approved. The percentage is the server's — the page
+              animates to it, never ahead of it.
+            </p>
+          </div>
+          <div class="meter" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" aria-label="Project completion">
+            <div class="meter-fill" id="meterFill"></div>
+          </div>
+
+          <div class="tracker" style="margin-top: 0.5rem">
+            <div class="tracker-stop" data-state="approved">
+              <div class="tracker-mark"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div><div class="tracker-name">Chapter 1</div><div class="tracker-title">Introduction</div></div>
+              <div class="tracker-meta">v2 · Approved</div>
+            </div>
+            <div class="tracker-stop" data-state="approved">
+              <div class="tracker-mark"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div><div class="tracker-name">Chapter 2</div><div class="tracker-title">Literature Review</div></div>
+              <div class="tracker-meta">v1 · Approved</div>
+            </div>
+            <div class="tracker-stop" data-state="needs-revision" data-overdue="true">
+              <div class="tracker-mark">3</div>
+              <div><div class="tracker-name">Chapter 3</div><div class="tracker-title">Methodology</div></div>
+              <div class="tracker-meta">v2 · Due 12 Aug — 14 days late</div>
+            </div>
+            <div class="tracker-stop" data-state="under-review">
+              <div class="tracker-mark">4</div>
+              <div><div class="tracker-name">Chapter 4</div><div class="tracker-title">Implementation &amp; Results</div></div>
+              <div class="tracker-meta">v1 · Under review</div>
+            </div>
+            <div class="tracker-stop" data-state="not-started">
+              <div class="tracker-mark">5</div>
+              <div><div class="tracker-name">Chapter 5</div><div class="tracker-title">Conclusion &amp; Recommendations</div></div>
+              <div class="tracker-meta">Due 30 Sep</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════ BUTTONS ══════════════ -->
+      <section class="stack">
+        <p class="type-label">Buttons</p>
+        <div class="card stack">
+          <div class="cluster">
+            <button class="btn btn-primary" type="button">Submit chapter</button>
+            <button class="btn btn-secondary" type="button">Download v2</button>
+            <button class="btn btn-ghost" type="button">Cancel</button>
+            <button class="btn btn-danger" type="button">Withdraw submission</button>
+            <button class="btn btn-primary" type="button" disabled>Disabled</button>
+            <button class="btn btn-primary" type="button" data-busy="true">Uploading</button>
+          </div>
+          <div class="cluster">
+            <button class="btn btn-primary btn-sm" type="button">Small</button>
+            <button class="btn btn-primary" type="button">Default</button>
+            <button class="btn btn-primary btn-lg" type="button">Large</button>
+          </div>
+          <p class="type-body-s text-subtlest">Tab through these — the focus ring is gold in a dark halo, so it clears 3:1 on any ground.</p>
+        </div>
+      </section>
+
+      <!-- ══════════════ FORM ══════════════ -->
+      <section class="stack">
+        <p class="type-label">Fields — label above, error tied to the control</p>
+        <div class="card">
+          <div class="field-row">
+            <div class="field">
+              <label class="field-label field-required" for="k-email">Email address</label>
+              <input id="k-email" type="email" value="kwame.mensah@gctu.edu.gh" />
+              <p class="field-hint">Use your university address.</p>
+            </div>
+            <div class="field">
+              <label class="field-label field-required" for="k-index">Index number</label>
+              <input id="k-index" value="04220231D" aria-invalid="true" aria-describedby="k-index-err" />
+              <p class="field-error" id="k-index-err">
+                <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.4" stroke="currentColor" stroke-width="1.7"/><path d="M8 4.8v3.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="8" cy="11" r="0.9" fill="currentColor"/></svg>
+                Index number may only contain letters, digits, hyphens and slashes.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════ MESSAGES ══════════════ -->
+      <section class="stack">
+        <p class="type-label">Messages — the server's own words, verbatim</p>
+        <div class="banner banner-warn" style="border-radius: var(--radius-md)">
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2.8L14.4 13.2H1.6L8 2.8z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 6.6v2.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="8" cy="11.2" r="0.9" fill="currentColor"/></svg>
+          <span>Your account still uses the password it was created with. Change it to keep the account yours.</span>
+          <span class="banner-actions"><button class="btn btn-secondary btn-sm" type="button">Change password</button></span>
+        </div>
+        <div class="stack-8">
+          <div class="message message-ok"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><div><div class="message-title">Chapter 3 – Methodology submitted successfully as version 2.</div></div></div>
+          <div class="message message-risk"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.4" stroke="currentColor" stroke-width="1.7"/><path d="M8 4.8v3.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="8" cy="11" r="0.9" fill="currentColor"/></svg><div>That file claims to be "image/png" but has a .pdf extension. Please re-save it and try again.</div></div>
+          <div class="message message-info"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.4" stroke="currentColor" stroke-width="1.7"/><path d="M8 7.4v3.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="8" cy="5.2" r="0.9" fill="currentColor"/></svg><div>An administrator will review your registration — you will be able to sign in once it is approved.</div></div>
+        </div>
+      </section>
+
+      <!-- ══════════════ EMPTY / LOADING ══════════════ -->
+      <section class="stack">
+        <p class="type-label">Empty and loading — designed before the populated state</p>
+        <div style="display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr))">
+          <div class="card">
+            <div class="empty">
+              <div class="empty-mark">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 19V6.5A2.5 2.5 0 017.5 4h9A2.5 2.5 0 0119 6.5V19l-3.5-2.2L12 19l-3.5-2.2L5 19z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+              </div>
+              <p class="empty-title">No supervisor assigned yet</p>
+              <p class="empty-body">
+                An administrator assigns your supervisor. You will get a
+                notification the moment that happens — nothing is waiting on you.
+              </p>
+              <div class="empty-actions">
+                <button class="btn btn-secondary btn-sm" type="button">Contact the coordinator</button>
+              </div>
+            </div>
+          </div>
+          <div class="card stack-8" aria-busy="true" aria-label="Loading submissions">
+            <div class="skeleton skeleton-line" style="width: 45%"></div>
+            <div class="skeleton skeleton-line" style="width: 80%"></div>
+            <div class="skeleton skeleton-line" style="width: 70%"></div>
+            <div class="skeleton skeleton-block" style="margin-top: 0.5rem"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════ TABLE ══════════════ -->
+      <section class="stack">
+        <p class="type-label">Table — real markup, tabular figures, hairline rules</p>
+        <div class="table-wrap">
+          <table>
+            <caption class="sr-only">Review queue</caption>
+            <thead>
+              <tr><th scope="col">Student</th><th scope="col">Chapter</th><th scope="col">Version</th><th scope="col">Submitted</th><th scope="col">Progress</th><th scope="col">Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Kwame Mensah</td><td>Chapter 3 – Methodology</td><td>2</td><td>14 Aug 2026</td><td>40%</td><td><span class="lozenge lozenge-info">Under review</span></td></tr>
+              <tr><td>Ama Owusu</td><td>Chapter 1 – Introduction</td><td>1</td><td>09 Aug 2026</td><td>100%</td><td><span class="lozenge lozenge-ok">Approved</span></td></tr>
+              <tr><td>Yaw Boateng</td><td>Chapter 2 – Literature Review</td><td>3</td><td>02 Aug 2026</td><td>20%</td><td><span class="lozenge lozenge-warn">Needs revision</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ══════════════ NAV / AVATAR ══════════════ -->
+      <section class="stack">
+        <p class="type-label">Navigation items</p>
+        <div class="card" style="max-width: 18rem">
+          <a class="nav-item" href="#" aria-current="page"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/></svg>Dashboard</a>
+          <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 3.5h8L18.5 8v12.5h-13V3.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M13.5 3.5V8.5H18.5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>Submissions<span class="lozenge lozenge-neutral nav-item-count">5</span></a>
+          <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4.5 5.5h15v11h-9l-4 3v-3h-2v-11z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>Feedback<span class="lozenge lozenge-bold lozenge-info nav-item-count">2</span></a>
+          <div class="cluster" style="margin-top: 1rem"><span class="avatar">KM</span><div><div class="type-heading-xs">Kwame Mensah</div><div class="type-body-s text-subtlest">Student · 04220231D</div></div></div>
+        </div>
+      </section>
+
+      <p class="type-body-s text-subtlest">
+        Stage 2 of the build: tokens and primitives only. Screens come next.
+      </p>
+    </main>
+
+    <script>
+      /* Swatch strips, generated from the tokens themselves so this
+         page cannot drift from the palette it documents. */
+      var SOURCED = {
+        "--navy-950": "site — deepest section ground",
+        "--navy-900": "site — header bar",
+        "--navy-800": "site — section ground",
+        "--gold-400": "site — buttons and focus outline",
+      };
+      function strip(id, prefix, steps) {
+        var el = document.getElementById(id);
+        el.style.display = "grid";
+        el.style.gap = "0.25rem";
+        el.style.gridTemplateColumns = "repeat(auto-fit, minmax(4.5rem, 1fr))";
+        var cs = getComputedStyle(document.documentElement);
+        steps.forEach(function (s) {
+          var name = prefix + s;
+          var value = cs.getPropertyValue(name).trim();
+          var cell = document.createElement("div");
+          var sourced = SOURCED[name];
+          cell.innerHTML =
+            '<div style="height:2.75rem;border-radius:var(--radius-sm);border:1px solid var(--line);background:var(' +
+            name +
+            ')"></div><div class="type-body-s" style="margin-top:.25rem;font-variant-numeric:tabular-nums">' +
+            s +
+            "</div>" +
+            '<div class="type-body-s text-subtlest" style="font-variant-numeric:tabular-nums">' +
+            value +
+            "</div>" +
+            (sourced
+              ? '<div class="type-body-s" style="color:var(--accent-text);font-weight:600">sourced</div>'
+              : "");
+          cell.title = sourced || "interpolated in OKLCH";
+          el.appendChild(cell);
+        });
+      }
+      var STEPS = [950, 900, 800, 700, 600, 500, 400, 300, 200, 100, 50];
+      strip("ramp-navy", "--navy-", STEPS);
+      strip("ramp-gold", "--gold-", [700, 600, 500, 400, 300, 200, 100, 50]);
+      strip("ramp-ink", "--ink-", [900, 800, 700, 600, 500, 400, 300, 200, 100, 50]);
+
+      /* The meter animates to the value; the numeral counts up in
+         sync. Both start from the previous value, never from zero on
+         a refetch — here the previous value is 0 because the page
+         just loaded. */
+      function animateTo(target) {
+        var fill = document.getElementById("meterFill");
+        var out = document.getElementById("pct");
+        fill.style.width = target + "%";
+        var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (reduce) { out.textContent = target + "%"; return; }
+        var start = performance.now(), from = 0, dur = 320;
+        (function step(now) {
+          var t = Math.min(1, (now - start) / dur);
+          out.textContent = Math.round(from + (target - from) * t) + "%";
+          if (t < 1) requestAnimationFrame(step);
+        })(start);
+      }
+      requestAnimationFrame(function () { animateTo(40); });
+
+      /* Glass on the top bar only past 8px of scroll. */
+      var topbar = document.getElementById("topbar");
+      function onScroll() {
+        topbar.setAttribute("data-scrolled", String(window.scrollY > 8));
+      }
+      addEventListener("scroll", onScroll, { passive: true });
+      onScroll();
+
+      document.getElementById("themeToggle").addEventListener("click", function () {
+        var root = document.documentElement;
+        var now = root.getAttribute("data-theme");
+        var next =
+          now === "dark" ? "light" : now === "light" ? "dark" :
+          matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "dark";
+        root.setAttribute("data-theme", next);
+        try { localStorage.setItem("opsts-theme", next); } catch (e) {}
+      });
+    </script>
+  </body>
+</html>

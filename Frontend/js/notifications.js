@@ -30,14 +30,17 @@ var NotificationSystem = (function () {
   var _cache        = []; /* last fetched notifications, for the dropdown */
   var _POLL_MS      = 15000;
 
-  /* ── Notification type config (Font Awesome) ── */
+  /* ── Notification type config (Font Awesome) ──
+     `color` is the icon chip's fill and `fg` the glyph itself.
+     Both are design tokens rather than literals so the dropdown
+     follows the light/dark theme like the rest of the UI. */
   var TYPE_CONFIG = {
-    submission: { icon: '<i class="fa-solid fa-upload"></i>',        color: "var(--primary-light)",   label: "Submission" },
-    feedback:   { icon: '<i class="fa-solid fa-comments"></i>',      color: "var(--secondary-light)", label: "Feedback"   },
-    meeting:    { icon: '<i class="fa-solid fa-calendar-days"></i>', color: "var(--warning-light)",   label: "Meeting"    },
-    deadline:   { icon: '<i class="fa-solid fa-clock"></i>',         color: "var(--danger-light)",    label: "Deadline"   },
-    approval:   { icon: '<i class="fa-solid fa-circle-check"></i>',  color: "var(--secondary-light)", label: "Approval"   },
-    system:     { icon: '<i class="fa-solid fa-bell"></i>',          color: "var(--gray-100)",        label: "System"     },
+    submission: { icon: '<i class="fa-solid fa-upload"></i>',        color: "var(--primary-light)",   fg: "var(--primary)",   label: "Submission" },
+    feedback:   { icon: '<i class="fa-solid fa-comments"></i>',      color: "var(--secondary-light)", fg: "var(--secondary)", label: "Feedback"   },
+    meeting:    { icon: '<i class="fa-solid fa-calendar-days"></i>', color: "var(--warning-light)",   fg: "var(--warning)",   label: "Meeting"    },
+    deadline:   { icon: '<i class="fa-solid fa-clock"></i>',         color: "var(--danger-light)",    fg: "var(--danger)",    label: "Deadline"   },
+    approval:   { icon: '<i class="fa-solid fa-circle-check"></i>',  color: "var(--secondary-light)", fg: "var(--secondary)", label: "Approval"   },
+    system:     { icon: '<i class="fa-solid fa-bell"></i>',          color: "var(--gray-100)",        fg: "var(--gray-600)",  label: "System"     },
   };
 
   /* ══════════════════════════════════════
@@ -166,47 +169,11 @@ var NotificationSystem = (function () {
      PRIVATE: _buildDropdown
   ══════════════════════════════════════ */
   function _buildDropdown() {
-    if (!document.getElementById("ntf-styles")) {
-      var style = document.createElement("style");
-      style.id  = "ntf-styles";
-      style.textContent = [
-        "#ntf-dropdown{position:fixed;top:66px;right:20px;width:360px;max-height:480px;",
-        "background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-lg);",
-        "box-shadow:var(--shadow-lg);z-index:500;display:none;flex-direction:column;",
-        "overflow:hidden;animation:ntfSlideIn .2s ease;}",
-        "#ntf-dropdown.open{display:flex;}",
-        "@keyframes ntfSlideIn{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}",
-        ".ntf-drop-header{display:flex;align-items:center;justify-content:space-between;",
-        "padding:14px 16px;border-bottom:1px solid var(--gray-200);flex-shrink:0;}",
-        ".ntf-drop-header h4{font-size:var(--font-size-sm);font-weight:700;color:var(--gray-900);}",
-        ".ntf-drop-header h4 i{margin-right:6px;}",
-        ".ntf-drop-header button{font-size:var(--font-size-xs);color:var(--primary);",
-        "background:none;border:none;cursor:pointer;font-weight:600;}",
-        ".ntf-drop-header button:hover{text-decoration:underline;}",
-        ".ntf-drop-list{overflow-y:auto;flex:1;}",
-        ".ntf-drop-list::-webkit-scrollbar{width:4px;}",
-        ".ntf-drop-list::-webkit-scrollbar-thumb{background:var(--gray-300);border-radius:4px;}",
-        ".ntf-drop-item{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;",
-        "border-bottom:1px solid var(--gray-200);cursor:pointer;transition:background .2s ease;}",
-        ".ntf-drop-item:last-child{border-bottom:none;}",
-        ".ntf-drop-item:hover{background:var(--gray-50);}",
-        ".ntf-drop-item.unread{background:var(--primary-light);}",
-        ".ntf-drop-item.unread:hover{background:#d2e3fc;}",
-        ".ntf-drop-icon{width:34px;height:34px;border-radius:50%;display:flex;",
-        "align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}",
-        ".ntf-drop-msg{font-size:var(--font-size-xs);color:var(--gray-800);line-height:1.5;flex:1;}",
-        ".ntf-drop-time{font-size:.68rem;color:var(--gray-500);margin-top:3px;}",
-        ".ntf-unread-dot{width:8px;height:8px;border-radius:50%;background:var(--primary);",
-        "flex-shrink:0;margin-top:5px;}",
-        ".ntf-drop-empty{text-align:center;padding:32px 20px;color:var(--gray-500);",
-        "font-size:var(--font-size-sm);}",
-        ".ntf-drop-empty i{font-size:1.8rem;display:block;margin-bottom:8px;color:var(--gray-400);}",
-        ".ntf-drop-footer{padding:10px 16px;border-top:1px solid var(--gray-200);",
-        "text-align:center;flex-shrink:0;}",
-        ".ntf-drop-footer a{font-size:var(--font-size-xs);color:var(--primary);font-weight:600;}",
-      ].join("");
-      document.head.appendChild(style);
-    }
+    /* The dropdown used to ship its own <style> block, injected here
+       at runtime with colours hard-coded to #fff — which meant it
+       ignored the dark theme entirely. Those rules now live in
+       src/components.css (#ntf-dropdown and .ntf-drop-*), so they
+       are built with the rest of the stylesheet and theme correctly. */
 
     var dropdown = document.createElement("div");
     dropdown.id  = "ntf-dropdown";
@@ -255,7 +222,7 @@ var NotificationSystem = (function () {
     listEl.innerHTML = _cache.slice(0, 10).map(function (n) {
       var cfg = TYPE_CONFIG[n.type] || TYPE_CONFIG.system;
       return '<div class="ntf-drop-item ' + (n.read ? "" : "unread") + '" data-ntf-id="' + n.id + '">' +
-        '<div class="ntf-drop-icon" style="background:' + cfg.color + ';">' + cfg.icon + "</div>" +
+        '<div class="ntf-drop-icon" style="background:' + cfg.color + ';color:' + cfg.fg + ';">' + cfg.icon + "</div>" +
         '<div style="flex:1;">' +
         '<div class="ntf-drop-msg">' + n.message + "</div>" +
         '<div class="ntf-drop-time">' + Utils.timeAgo(n.date) + "</div>" +

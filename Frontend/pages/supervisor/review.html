@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Applies the saved light/dark choice before first paint -->
+  <script src="../../js/theme.js"></script>
   <title>OPSTS – Review Submissions</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <link rel="stylesheet" href="../../css/style.css" />
-  <link rel="stylesheet" href="../../css/dashboard.css" />
-  <link rel="stylesheet" href="../../css/supervisor.css" />
+  <link rel="stylesheet" href="../../css/tailwind.css" />
 </head>
 <body>
 <div class="app-shell">
 
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <img src="../../assets/images/opsts-logo.png" alt="OPSTS Logo" />
+      <img src="../../assets/images/logo.png" alt="OPSTS Logo" />
       <div class="brand-text">OPSTS<small>Supervisor Portal</small></div>
     </div>
     <div class="sidebar-user">
@@ -24,53 +24,53 @@
         <div class="u-role" id="sideUserMeta"></div>
       </div>
     </div>
-    <nav class="sidebar-nav">
+    <nav class="sidebar-nav" aria-label="Primary">
       <div class="nav-section">Main</div>
-      <div class="nav-item" data-page="dashboard.html">
+      <button type="button" class="nav-item" data-page="dashboard.html">
         <span class="nav-icon"><i class="fa-solid fa-house"></i></span><span class="nav-label">Dashboard</span>
-      </div>
-      <div class="nav-item" data-page="students.html">
+      </button>
+      <button type="button" class="nav-item" data-page="students.html">
         <span class="nav-icon"><i class="fa-solid fa-user-graduate"></i></span><span class="nav-label">My Students</span>
-      </div>
-      <div class="nav-item active" data-page="review.html">
+      </button>
+      <button type="button" class="nav-item active" data-page="review.html" aria-current="page">
         <span class="nav-icon"><i class="fa-solid fa-pen-to-square"></i></span><span class="nav-label">Review Submissions</span>
         <span class="nav-badge hidden" id="reviewBadge"></span>
-      </div>
-      <div class="nav-item" data-page="progress.html">
+      </button>
+      <button type="button" class="nav-item" data-page="progress.html">
         <span class="nav-icon"><i class="fa-solid fa-chart-bar"></i></span><span class="nav-label">Monitor Progress</span>
-      </div>
+      </button>
       <div class="nav-section">Communication</div>
-      <div class="nav-item" data-page="schedule.html">
+      <button type="button" class="nav-item" data-page="schedule.html">
         <span class="nav-icon"><i class="fa-solid fa-calendar-plus"></i></span><span class="nav-label">Schedule Meetings</span>
-      </div>
-      <div class="nav-item" data-page="notifications.html">
+      </button>
+      <button type="button" class="nav-item" data-page="notifications.html">
         <span class="nav-icon"><i class="fa-solid fa-bell"></i></span><span class="nav-label">Notifications</span>
         <span class="nav-badge hidden" id="ntfBadge"></span>
-      </div>
+      </button>
       <div class="nav-section">Account</div>
-      <div class="nav-item" data-page="profile.html">
+      <button type="button" class="nav-item" data-page="profile.html">
         <span class="nav-icon"><i class="fa-solid fa-circle-user"></i></span><span class="nav-label">My Profile</span>
-      </div>
+      </button>
     </nav>
     <div class="sidebar-footer">
       <button class="btn-logout" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
     </div>
   </aside>
 
-  <div class="main">
+  <div class="main" id="main-content" role="main" tabindex="-1">
     <div class="topbar">
       <div class="topbar-left">
         <div class="topbar-title">Review Submissions <span>Give feedback on student work</span></div>
       </div>
       <div class="topbar-actions">
-        <button class="icon-btn" id="notifBtn"><i class="fa-solid fa-bell"></i><span class="dot hidden" id="ntfDot"></span></button>
-        <button class="icon-btn" id="profileBtn"><i class="fa-solid fa-circle-user"></i></button>
+        <button type="button" class="icon-btn" id="notifBtn" aria-label="Notifications"><i class="fa-solid fa-bell"></i><span class="dot hidden" id="ntfDot"></span></button>
+        <button type="button" class="icon-btn" id="profileBtn" aria-label="My profile"><i class="fa-solid fa-circle-user"></i></button>
       </div>
     </div>
 
     <div class="page-content">
       <div class="page-header">
-        <h2>Review Submissions</h2>
+        <h1>Review Submissions</h1>
         <p>Review student chapter submissions and provide feedback.</p>
       </div>
 
@@ -103,8 +103,8 @@
 <div class="modal-overlay" id="feedbackModal">
   <div class="modal">
     <div class="modal-header">
-      <h3><i class="fa-solid fa-comments"></i> Give Feedback</h3>
-      <button class="modal-close" id="closeFeedbackModal"><i class="fa-solid fa-xmark"></i></button>
+      <h2><i class="fa-solid fa-comments"></i> Give Feedback</h2>
+      <button type="button" class="modal-close" id="closeFeedbackModal" aria-label="Close dialog"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="modal-body">
       <div id="feedbackModalInfo"></div>
@@ -140,6 +140,7 @@
 <script src="../../js/utils.js"></script>
 <script src="../../js/api.js"></script>
 <script src="../../js/app.js"></script>
+<script src="../../js/a11y.js"></script>
 <script src="../../js/notifications.js"></script>
 <script src="../../js/supervisor.js"></script>
 </body>

@@ -1,0 +1,15 @@
+{
+  "name": "opsts-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OPSTS \u2013 Online Project Supervision & Tracking System (frontend)",
+  "scripts": {
+    "build": "tailwindcss -i ./src/input.css -o ./css/tailwind.css --minify",
+    "dev": "tailwindcss -i ./src/input.css -o ./css/tailwind.css --watch",
+    "serve": "node serve.js"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.0.0",
+    "tailwindcss": "^4.0.0"
+  }
+}
