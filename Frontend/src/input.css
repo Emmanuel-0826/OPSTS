@@ -34,3 +34,7 @@
 @source "../*.html";
 @source "../pages/**/*.html";
 @source "../js/**/*.js";
+@import "./base.css";
+@import "./components.css";
+@import "./auth.css";
+@import "./compat.css";

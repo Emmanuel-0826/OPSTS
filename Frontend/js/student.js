@@ -276,7 +276,7 @@ function initUploadZone(onSuccess) {
     fd.append("file", selectedFile);
 
     try {
-      await Api.upload("/submissions", fd);
+      await Api.post("/submissions", fd);
       showToast("Chapter submitted successfully! Your supervisor will be notified.", "success", 4000);
       form.reset();
       display.innerHTML = "";

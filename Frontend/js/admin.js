@@ -401,7 +401,7 @@ async function initProjects() {
       btn.addEventListener("click", async function () {
         btn.disabled = true;
         try {
-          await Api.put("/projects/" + btn.dataset.completeId, { status: "Completed", completionPercent: 100 });
+          await Api.put("/projects/" + btn.dataset.completeId, { status: "Completed" });
           showToast("Project marked as completed.", "success");
           await loadProjects();
         } catch (err) {
