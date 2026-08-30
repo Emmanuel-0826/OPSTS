@@ -16,8 +16,6 @@ router.use(requireAuth);
 router.get(
   "/",
   [
-    query("scope").optional().isIn(["all", "mine"])
-      .withMessage("Scope must be all or mine."),
     query("unreadOnly").optional().isIn(["0", "1", "true", "false"]),
     query("limit").optional().isInt({ min: 1, max: 200 })
       .withMessage("Limit must be between 1 and 200."),

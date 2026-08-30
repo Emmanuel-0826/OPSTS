@@ -34,8 +34,30 @@
   border-right: 1px solid var(--nav-line);
   z-index: var(--z-nav);
 }
+/* Under 1024px the shell collapses to a single column and the
+   sidebar becomes an off-canvas drawer that the topbar hamburger
+   slides in. It used to be `display: none` here, which is why
+   .mobile-open did nothing and the whole navigation — every page
+   of the app — was unreachable on a phone. */
 @media (max-width: 1024px) {
-  .sidebar { display: none; }
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(17rem, 82vw);
+    height: 100dvh;
+    z-index: calc(var(--z-scrim) + 1);
+    box-shadow: var(--shadow-lg);
+    transform: translateX(-100%);
+    transition: transform var(--dur-modal) var(--ease-decelerate);
+  }
+  .sidebar.mobile-open { transform: none; }
+
+  /* The drawer is its own overlay; a desktop collapse choice left
+     in sessionStorage must not follow it here and hide the labels. */
+  .sidebar.collapsed { width: min(17rem, 82vw); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar { transition: none; }
 }
 
 .main {
@@ -279,7 +301,7 @@
   font-weight: var(--fw-bold);
   letter-spacing: var(--ls-heading);
 }
-.card-header h2 i { color: var(--text-subtlest); font-size: var(--fs-14); }
+.card-header h2 i { color: var(--text-subtlest); font-size: var(--fs-16); }
 
 .card-body { min-width: 0; }
 
@@ -421,3 +443,201 @@
 @media (prefers-reduced-motion: reduce) {
   .progress-fill { transition-duration: 0.01ms; }
 }
+
+/* ── Navigation toggles ──────────────────────────────────────
+   Two different controls, deliberately kept apart:
+
+     .mobile-nav-btn    the topbar hamburger. Opens the drawer.
+                        Exists ONLY below 1024px, where the
+                        sidebar is off-canvas.
+     .sidebar-toggle-btn  the "hide navigation" chevron in the
+                        sidebar brand. Shrinks the sidebar to
+                        icons. Exists ONLY at 1025px and up,
+                        where there is a sidebar to shrink.
+
+   Both are injected by app.js, so neither had a rule of its own:
+   the hamburger rendered as a bare button on every screen size
+   including desktop, and the chevron was invisible. */
+
+.mobile-nav-btn {
+  display: none;
+  place-items: center;
+  flex: none;
+  width: var(--hit-target);
+  height: var(--hit-target);
+  margin-right: var(--space-4);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-subtle);
+  font-size: var(--fs-16);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-standard),
+              color var(--dur-fast) var(--ease-standard);
+}
+.mobile-nav-btn:hover { background: var(--surface-hovered); color: var(--text); }
+
+@media (max-width: 1024px) {
+  .mobile-nav-btn { display: grid; }
+}
+
+/* Tap-away layer behind the open drawer. */
+.sidebar-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-scrim);
+  background: var(--scrim);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--dur-modal) var(--ease-standard),
+              visibility 0s linear var(--dur-modal);
+}
+.sidebar-scrim.show {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+@media (min-width: 1025px) {
+  /* No drawer up here, so nothing to dim. */
+  .sidebar-scrim { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-scrim { transition-duration: 0.01ms; }
+}
+
+.sidebar-toggle-btn {
+  display: none;
+  place-items: center;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-subtlest);
+  font-size: var(--fs-12);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-standard),
+              color var(--dur-fast) var(--ease-standard);
+}
+.sidebar-toggle-btn:hover { background: var(--surface-hovered); color: var(--text); }
+
+@media (min-width: 1025px) {
+  .sidebar-toggle-btn { display: grid; }
+
+  /* ── Collapsed (icon-only) sidebar ──
+     The width itself is one token, set on :root by app.js via the
+     .nav-collapsed class, because .app-shell sizes its first grid
+     column from --nav-width. Everything below is what has to
+     disappear for 4.75rem to be enough room. */
+  :root.nav-collapsed { --nav-width: 4.75rem; }
+
+  .sidebar.collapsed { padding-inline: var(--space-8); }
+
+  .sidebar.collapsed .brand-text,
+  .sidebar.collapsed .nav-label,
+  .sidebar.collapsed .nav-section,
+  .sidebar.collapsed .nav-badge,
+  /* :not(.avatar) matters — the avatar is also a direct div child
+     of .sidebar-user, and hiding it leaves the collapsed rail with
+     nothing to say whose session this is. */
+  .sidebar.collapsed .sidebar-user > div:not(.avatar) {
+    display: none;
+  }
+
+  /* Centre what is left, and keep every row a square hit target so
+     the icons line up down one column. */
+  .sidebar.collapsed .nav-item,
+  .sidebar.collapsed .sidebar-user,
+  .sidebar.collapsed .btn-logout {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  /* .btn-logout's label is a bare text node next to the icon —
+     there is no element to hide, so zero the button's font size
+     and give the icon its own back. */
+  .sidebar.collapsed .btn-logout { font-size: 0; gap: 0; }
+  .sidebar.collapsed .btn-logout i { font-size: var(--fs-16); }
+
+  /* The brand keeps the logo; the chevron moves underneath it so
+     there is still something to click to expand again. */
+  .sidebar.collapsed .sidebar-brand {
+    justify-content: center;
+    padding-bottom: var(--space-32);
+  }
+  .sidebar.collapsed .sidebar-toggle-btn {
+    top: auto;
+    right: auto;
+    bottom: var(--space-4);
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/* ── Typography roles ────────────────────────────────────────
+   base.css deliberately gives headings no size — "sizes are set
+   by the type-role classes in components.css". For the vocabulary
+   the 21 portal pages actually use, those classes were never
+   written. Every <h1> therefore inherited 16px from body: a page
+   title the same size as its own body text, the same size as the
+   card headings below it, smaller than the topbar label above it,
+   and half the size of the stat numbers beside it. No page in the
+   app had a heading hierarchy.
+
+   One ladder, straight off the 1.25 modular scale in tokens.css,
+   so every page steps the same way:
+
+     25  page title          .page-header h1
+     20  card / dialog       .card-header h2, .modal-header h2
+     16  block heading       h3, and the h4s the portals render
+     14  body, controls      (base)
+     12  labels, captions    .stat-label, th
+
+   31 is left to .stat-val on purpose. On a dashboard the number
+   is what you came for, and it should outrank the page title.
+
+   Setting real sizes also switches Fraunces' optical-size axis on
+   properly: font-optical-sizing is auto, so a 25px title now gets
+   display letterforms instead of the small-text shapes it was
+   being drawn with at 16. */
+
+.page-header h1 {
+  font-size: var(--fs-25);
+  line-height: var(--lh-display);
+  letter-spacing: var(--ls-display);
+}
+.page-header > p {
+  max-width: var(--measure);
+  font-size: var(--fs-14);
+  color: var(--text-subtle);
+}
+
+.card-header h2,
+.modal-header h2 {
+  font-size: var(--fs-20);
+  line-height: var(--lh-heading);
+}
+
+/* Sub-block headings. Most of these are rendered from JS strings,
+   so they never picked up a class to be sized by. */
+.page-content h3,
+.modal-body h3 {
+  font-size: var(--fs-16);
+  line-height: var(--lh-heading);
+}
+.meeting-card h4,
+.student-summary-card h4,
+.file-row h4,
+.card-body h4 {
+  font-size: var(--fs-16);
+  line-height: var(--lh-dense);
+}
+
+/* Initials are drawn to their box, not to the type scale — but
+   keep them off a fractional size so they sit on the baseline
+   grid like everything else. */
+.avatar { font-size: var(--fs-16); }
+.avatar-lg { font-size: var(--fs-20); }

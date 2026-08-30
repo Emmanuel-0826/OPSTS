@@ -234,7 +234,23 @@ async function initUsers(user) {
     tbody.querySelectorAll("button[data-del-id]").forEach(function (btn) {
       btn.addEventListener("click", async function () {
         var u = allUsers.find(function (x) { return String(x.id) === btn.dataset.delId; });
-        if (!u || !window.confirm("Remove " + u.name + " from the system?")) return;
+        if (!u) return;
+
+        /* The same styled dialog the sign-out button uses. Deleting a
+           person cascades to their project, submissions, feedback and
+           notifications, so the prompt says so rather than asking a
+           one-line question in browser chrome. */
+        var ok = await confirmAction({
+          title: "Remove " + u.name + "?",
+          message: "This permanently deletes their account along with their project, " +
+            "submissions, feedback and notifications. It cannot be undone.",
+          confirmLabel: "Remove account",
+          cancelLabel: "Keep account",
+          tone: "danger",
+          icon: "fa-user-xmark",
+        });
+        if (!ok) return;
+
         try {
           await Api.delete("/users/" + btn.dataset.delId);
           showToast(u.name + " has been removed.", "info");
@@ -632,7 +648,7 @@ async function initNotifications(user) {
     listEl.innerHTML = notifs.map(function (n) {
       return '<div class="notif-item ' + (n.read ? "" : "unread") + '" data-id="' + n.id + '">' +
         '<span class="notif-icon">' + Utils.notifIcon(n.type) + "</span><div>" +
-        '<div class="notif-msg">' + n.message + "</div>" +
+        '<div class="notif-msg">' + Utils.escapeHtml(n.message) + "</div>" +
         '<div class="notif-time">' + Utils.formatDateTime(n.date) + "</div></div></div>";
     }).join("");
 
@@ -650,7 +666,11 @@ async function initNotifications(user) {
 
   async function load() {
     try {
-      var res = await Api.get("/notifications?scope=all");
+      /* The administrator sees their own notifications, the same as
+         everyone else. This used to request ?scope=all, which
+         returned every notification in the system — private
+         messages addressed to individual students and supervisors. */
+      var res = await Api.get("/notifications");
       notifs = res.notifications || [];
       render();
     } catch (err) {

@@ -10,11 +10,21 @@
    static files, so a clone with no Node toolchain still renders
    correctly. Re-run the build after editing anything in src/.
 
-   Load order is deliberate:
+   Load order is deliberate — later files win ties:
      tailwindcss  → sets up the theme/base/components/utilities layers
      tokens       → runtime CSS variables + @theme inline mapping
      base         → element defaults (forms, tables, focus, page wash)
      components   → the .card / .btn / .nav-item component classes
+     auth         → the sign-in / register screens
+     compat       → the legacy class names pages/ and js/ actually use
+     content      → page-level blocks (notifications, meetings, files)
+
+   Each file is listed EXACTLY ONCE. They were previously imported
+   twice over, which emitted every rule twice and doubled the
+   build; identical duplicates are harmless to look at and a real
+   problem to debug, because "which copy won?" becomes a question.
+   src/compat1.css is a byte-for-byte copy of compat.css and is
+   deliberately not imported — compat.css is the live one.
 ============================================================ */
 
 /* source(none) switches OFF automatic file detection so the three
@@ -28,15 +38,11 @@
 @import "./base.css";
 @import "./components.css";
 @import "./auth.css";
+@import "./compat.css";
+@import "./content.css";
 
 /* The portal scripts build their markup as strings, so a good half
    of the class names in this app exist only inside js/*.js. */
 @source "../*.html";
 @source "../pages/**/*.html";
 @source "../js/**/*.js";
-@import "./base.css";
-@import "./components.css";
-@import "./auth.css";
-@import "./compat.css";
-@import "./compat1.css";
-@import "./content.css";

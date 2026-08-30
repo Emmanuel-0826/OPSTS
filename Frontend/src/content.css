@@ -445,9 +445,120 @@
   color: var(--text-subtle);
 }
 
+/* Notification chip colours, from the same four status ramps as
+   the rest of the app so they theme with it. .ntf-drop-icon's own
+   neutral fill is the "system" case and the fallback. */
+.ntf-icon-info   { background: var(--info-bg); color: var(--info-text); }
+.ntf-icon-ok     { background: var(--ok-bg);   color: var(--ok-text); }
+.ntf-icon-warn   { background: var(--warn-bg); color: var(--warn-text); }
+.ntf-icon-risk   { background: var(--risk-bg); color: var(--risk-text); }
+.ntf-icon-accent { background: var(--accent-bg); color: var(--accent-text); }
+
 @media (prefers-reduced-motion: reduce) {
   .notif-item, .ntf-drop-item { transition: none; }
 }
+
+/* ── The bell dropdown panel ─────────────────────────────────
+   notifications.js appends this to <body>, so with no position of
+   its own it laid out as the last block in the document: every
+   page ended with a permanent, full-width list of notifications
+   below the content, and the bell appeared to do nothing.
+
+   It is a popover. Fixed, out of flow, and hidden until .open —
+   which is the class _toggleDropdown() has always been setting.
+   The top/right are overwritten inline by notifications.js so the
+   panel hangs off the bell wherever the topbar happens to be; the
+   values here are the fallback for a page with no bell. */
+#ntf-dropdown {
+  position: fixed;
+  top: 4.25rem;
+  right: var(--space-16);
+  z-index: var(--z-dropdown);
+  display: flex;
+  flex-direction: column;
+  width: min(24rem, calc(100vw - var(--space-32)));
+  max-height: min(30rem, calc(100dvh - 6rem));
+  overflow: hidden;
+  background: var(--surface-overlay);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+
+  /* visibility rather than display, so the panel can animate out.
+     Delaying only the visibility step keeps it non-interactive and
+     out of the tab order the instant it starts closing. */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-0.375rem) scale(0.985);
+  transition:
+    opacity var(--dur-fast) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard),
+    visibility 0s linear var(--dur-fast);
+}
+#ntf-dropdown.open {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+  #ntf-dropdown { transition-duration: 0.01ms; }
+}
+
+/* The list is the only part that scrolls; header and footer stay
+   put so "Mark all as read" is reachable from a long list. */
+#ntf-dropdown .ntf-drop-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+#ntf-dropdown .ntf-drop-header h4 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin: 0;
+  font-size: var(--fs-14);
+  font-weight: var(--fw-semibold);
+  color: var(--text);
+}
+#ntf-dropdown .ntf-drop-header button {
+  border: 0;
+  background: transparent;
+  padding: var(--space-4) var(--space-6);
+  border-radius: var(--radius-sm);
+  color: var(--action);
+  font: inherit;
+  font-size: var(--fs-12);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  white-space: nowrap;
+}
+#ntf-dropdown .ntf-drop-header button:hover { background: var(--surface-hovered); }
+#ntf-dropdown .ntf-drop-footer { justify-content: center; }
+#ntf-dropdown .ntf-drop-footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-6);
+  color: var(--action);
+  font-size: var(--fs-12);
+  font-weight: var(--fw-medium);
+  text-decoration: none;
+}
+#ntf-dropdown .ntf-drop-footer a:hover { text-decoration: underline; }
+
+/* On a phone the panel is a sheet pinned to the viewport edges
+   rather than a 24rem card hanging off a bell that is itself only
+   a few pixels from the corner. */
+@media (max-width: 640px) {
+  #ntf-dropdown {
+    left: var(--space-8);
+    right: var(--space-8);
+    width: auto;
+    max-height: min(24rem, calc(100dvh - 5.5rem));
+  }
+}
+
 
 /* ── Meetings ────────────────────────────────────────────────
    The date block is the anchor — day over month, tabular so the
@@ -674,4 +785,159 @@
   .role-filter-tabs { overflow-x: auto; }
   .student-card-actions, .feedback-actions { width: 100%; }
   .student-card-actions .btn, .feedback-actions .btn { flex: 1 1 auto; }
+}
+
+/* ── Confirm dialog ──────────────────────────────────────────
+   app.js confirmAction() builds this out of the same .modal parts
+   every other dialog uses, so a sign-out prompt looks like the
+   app rather than like the browser. It replaces window.confirm(),
+   which could not be themed, styled or made to match anything. */
+
+.confirm-modal { width: min(26rem, 100%); }
+
+.confirm-modal .modal-header h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  margin: 0;
+  font-weight: var(--fw-semibold);
+}
+
+.confirm-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-14);
+}
+.confirm-icon-danger  { background: var(--risk-bg);   color: var(--risk-text); }
+.confirm-icon-primary { background: var(--accent-bg); color: var(--accent); }
+
+.confirm-text {
+  margin: 0;
+  font-size: var(--fs-14);
+  color: var(--text-subtle);
+  line-height: var(--lh-body);
+}
+
+/* The drawer is a fixed overlay; without this the page keeps
+   scrolling underneath it, which reads as the drawer being
+   broken rather than as the page being live. */
+body.nav-drawer-open { overflow: hidden; }
+@media (min-width: 1025px) {
+  body.nav-drawer-open { overflow: visible; }
+}
+
+/* ── Adding a join link after the fact ───────────────────────
+   A remote meeting with no link renders "Link pending" on both
+   portals. On the supervisor's schedule that badge is followed by
+   this — the one control that can clear it. */
+
+.meeting-link-add {
+  margin-top: var(--space-8);
+}
+.meeting-link-form {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+}
+.meeting-link-form .input-sm {
+  flex: 1 1 14rem;
+  min-width: 0;
+  padding: var(--space-6) var(--space-8);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-14);
+}
+.meeting-link-form .input-sm:focus-visible {
+  outline: 2px solid var(--focus-ring, var(--action));
+  outline-offset: 1px;
+}
+
+/* ── Toast tones ─────────────────────────────────────────────
+   Every toast in the app used to look identical: a plain surface
+   card with no colour at all. Two things caused it.
+
+   First, there are two toast APIs and they emit different class
+   names. UI.toast() in js/ui.js writes .toast-ok / -risk / -warn
+   / -info; showToast() in js/app.js — the one all 21 portal pages
+   actually call — writes .toast-success / -error / -warning /
+   -info. Only the first set had rules, so every portal toast fell
+   through to the bare .toast.
+
+   Second, the rules that did exist coloured `.toast svg`, and
+   showToast() builds its icon as a Font Awesome <i>. Even the
+   matching class painted nothing.
+
+   Both vocabularies are handled here, and the tone is carried by
+   the same bg/text/border triple the badges use, plus a rail —
+   so "saved" and "could not save" are told apart at a glance and
+   not by reading. Colour is never the only signal: each toast
+   still leads with its own icon. */
+
+.toast {
+  /* Room for the rail, and a spare stop for the shadow so each
+     tone can add its rail without dropping the elevation. */
+  padding-left: var(--space-20);
+}
+
+.toast-ok,
+.toast-success {
+  background: var(--ok-bg);
+  border-color: var(--ok-border);
+  box-shadow: inset 4px 0 0 var(--ok-bold), var(--shadow-lg);
+}
+.toast-ok i, .toast-ok svg,
+.toast-success i, .toast-success svg { color: var(--ok-text); }
+
+.toast-warn,
+.toast-warning {
+  background: var(--warn-bg);
+  border-color: var(--warn-border);
+  box-shadow: inset 4px 0 0 var(--warn-bold), var(--shadow-lg);
+}
+.toast-warn i, .toast-warn svg,
+.toast-warning i, .toast-warning svg { color: var(--warn-text); }
+
+.toast-risk,
+.toast-error {
+  background: var(--risk-bg);
+  border-color: var(--risk-border);
+  box-shadow: inset 4px 0 0 var(--risk-bold), var(--shadow-lg);
+}
+.toast-risk i, .toast-risk svg,
+.toast-error i, .toast-error svg { color: var(--risk-text); }
+
+.toast-info {
+  background: var(--info-bg);
+  border-color: var(--info-border);
+  box-shadow: inset 4px 0 0 var(--info-bold), var(--shadow-lg);
+}
+.toast-info i, .toast-info svg { color: var(--info-text); }
+
+/* showToast() wraps its message in a bare <span>; give it the
+   same alignment the SVG variant gets from .toast svg. */
+.toast > span { flex: 1 1 auto; min-width: 0; }
+.toast > i {
+  flex: none;
+  margin-top: 0.1em;
+  font-size: 1rem;
+  line-height: var(--lh-body);
+}
+
+/* The join control is the last child of a flex column, so it
+   stretched to the full card width — a "Link pending" chip as
+   wide as the card reads as a banner, not a status. Size it to
+   its own content and give it a little air off the meta lines. */
+.meeting-info > .btn,
+.meeting-info > .badge,
+.meeting-info > .meeting-link-add {
+  align-self: flex-start;
+  margin-top: var(--space-8);
 }

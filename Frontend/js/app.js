@@ -113,6 +113,114 @@ function initTopbarButtons() {
 }
 
 /* ══════════════════════════════════════
+   CONFIRM DIALOG
+   window.confirm() is OS chrome: it ignores the theme, cannot be
+   styled, freezes the page while it is up, and on most mobile
+   browsers renders as a grey system sheet with the site's URL
+   printed above the question. Signing out is the one destructive
+   action on every page in the app, so it gets a real dialog built
+   from the same .modal parts as every other dialog here.
+
+   Returns a Promise<boolean>: false for Cancel, Escape, or a
+   click on the backdrop.
+
+   The dialog is created at runtime, which means a11y.js has
+   already finished wiring the page's static .modal-overlay
+   elements and will not see this one. Focus, the Tab trap and
+   Escape are therefore handled here rather than borrowed.
+══════════════════════════════════════ */
+function confirmAction(options) {
+  var opts         = options || {};
+  var title        = opts.title || "Are you sure?";
+  var message      = opts.message || "";
+  var confirmLabel = opts.confirmLabel || "Confirm";
+  var cancelLabel  = opts.cancelLabel || "Cancel";
+  var tone         = opts.tone === "danger" ? "danger" : "primary";
+  var icon         = opts.icon || "fa-circle-question";
+
+  return new Promise(function (resolve) {
+    var overlay = document.getElementById("appConfirmModal");
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "appConfirmModal";
+      overlay.className = "modal-overlay";
+      document.body.appendChild(overlay);
+    }
+
+    overlay.innerHTML =
+      '<div class="modal confirm-modal" role="dialog" aria-modal="true" aria-labelledby="appConfirmTitle" aria-describedby="appConfirmText" tabindex="-1">' +
+        '<div class="modal-header">' +
+          '<h2 id="appConfirmTitle">' +
+            '<span class="confirm-icon confirm-icon-' + tone + '"><i class="fa-solid ' + icon + '"></i></span>' +
+            Utils.escapeHtml(title) +
+          "</h2>" +
+        "</div>" +
+        '<div class="modal-body"><p id="appConfirmText" class="confirm-text">' +
+          Utils.escapeHtml(message) +
+        "</p></div>" +
+        '<div class="modal-footer">' +
+          '<button type="button" class="btn btn-ghost" data-confirm="no">' + Utils.escapeHtml(cancelLabel) + "</button>" +
+          '<button type="button" class="btn btn-' + tone + '" data-confirm="yes">' + Utils.escapeHtml(confirmLabel) + "</button>" +
+        "</div>" +
+      "</div>";
+
+    var opener  = document.activeElement;
+    var buttons = overlay.querySelectorAll("button[data-confirm]");
+    var settled = false;
+
+    function finish(answer) {
+      if (settled) return;
+      settled = true;
+      document.removeEventListener("keydown", onKey, true);
+      overlay.classList.remove("open");
+      /* Focus goes back to whatever opened the dialog, or a
+         keyboard user restarts from the top of the document. */
+      if (opener && document.contains(opener) && opener.focus) opener.focus();
+      resolve(answer);
+    }
+
+    function onKey(e) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        finish(false);
+        return;
+      }
+      if (e.key !== "Tab") return;
+
+      /* Two buttons, so the trap is just "wrap at either end". */
+      var first = buttons[0];
+      var last  = buttons[buttons.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    buttons.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        finish(btn.dataset.confirm === "yes");
+      });
+    });
+
+    overlay.addEventListener("click", function (e) {
+      if (e.target === overlay) finish(false);
+    });
+
+    document.addEventListener("keydown", onKey, true);
+    overlay.classList.add("open");
+
+    /* Land on the confirming button — it is what the dialog is
+       for — but Cancel is one Shift+Tab away and Escape always
+       works, so nothing destructive is a single stray Enter. */
+    var confirmBtn = overlay.querySelector('button[data-confirm="yes"]');
+    if (confirmBtn) confirmBtn.focus();
+  });
+}
+
+/* ══════════════════════════════════════
    LOGOUT
 ══════════════════════════════════════ */
 function initLogout() {
@@ -120,9 +228,16 @@ function initLogout() {
   if (!btn) return;
 
   btn.addEventListener("click", function () {
-    if (window.confirm("Are you sure you want to sign out?")) {
-      Utils.logout();
-    }
+    confirmAction({
+      title: "Sign out of OPSTS?",
+      message: "You will be returned to the sign-in page. Anything you have typed but not saved will be lost.",
+      confirmLabel: "Sign out",
+      cancelLabel: "Stay signed in",
+      tone: "danger",
+      icon: "fa-right-from-bracket",
+    }).then(function (confirmed) {
+      if (confirmed) Utils.logout();
+    });
   });
 }
 
@@ -188,20 +303,26 @@ function initModalBackdrops() {
 
 /* ══════════════════════════════════════
    SIDEBAR COLLAPSE / MINIMIZE TOGGLE
-   Injects a small toggle button into the sidebar-brand area
-   (no HTML changes needed on any page) that shrinks the sidebar
-   to icon-only width. Preference persists for the session.
+   Injects a small chevron into the sidebar-brand area (no HTML
+   changes needed on any page) that shrinks the sidebar to
+   icon-only width. Preference persists for the session.
+
+   Desktop only: below 1024px the sidebar is an off-canvas drawer
+   opened by the hamburger below, and there is nothing to collapse.
+   compat.css hides the chevron there.
 ══════════════════════════════════════ */
 function initSidebarToggle() {
   var sidebar = document.querySelector(".sidebar");
   var brand   = document.querySelector(".sidebar-brand");
   if (!sidebar || !brand || brand.querySelector(".sidebar-toggle-btn")) return;
 
+  if (!sidebar.id) sidebar.id = "app-sidebar";
   brand.style.position = "relative";
 
   var toggleBtn = document.createElement("button");
+  toggleBtn.type = "button";
   toggleBtn.className = "sidebar-toggle-btn";
-  toggleBtn.title = "Toggle sidebar";
+  toggleBtn.setAttribute("aria-controls", sidebar.id);
   brand.appendChild(toggleBtn);
 
   var collapsed = sessionStorage.getItem("opsts_sidebar_collapsed") === "1";
@@ -214,57 +335,76 @@ function initSidebarToggle() {
   });
 
   function applyState(isCollapsed) {
+    /* One state, two hooks: .collapsed on the sidebar hides the
+       labels, .nav-collapsed on <html> narrows the column.
+
+       The width itself stays in compat.css, as an override of
+       --nav-width — the token .app-shell actually sizes its first
+       grid column from. This used to write an inline
+       --sidebar-width instead, which no rule in the stylesheet
+       reads, so pressing the button changed precisely nothing. */
     sidebar.classList.toggle("collapsed", isCollapsed);
+    document.documentElement.classList.toggle("nav-collapsed", isCollapsed);
 
-    /* Expanded is whatever --sidebar-width is defined as in
-       style.css — clear the override rather than restating the
-       number here, so the two cannot drift apart. */
-    if (isCollapsed) {
-      document.documentElement.style.setProperty("--sidebar-width", "76px");
-    } else {
-      document.documentElement.style.removeProperty("--sidebar-width");
-    }
-
+    var label = isCollapsed ? "Show navigation labels" : "Hide navigation labels";
     toggleBtn.innerHTML = isCollapsed
       ? '<i class="fa-solid fa-angles-right"></i>'
       : '<i class="fa-solid fa-angles-left"></i>';
+    toggleBtn.title = label;
+    toggleBtn.setAttribute("aria-label", label);
+    toggleBtn.setAttribute("aria-expanded", isCollapsed ? "false" : "true");
   }
 }
 
 /* ══════════════════════════════════════
    MOBILE NAVIGATION
-   Below 768px the sidebar is translated off-screen by the
-   stylesheet. Until now nothing could bring it back, so the whole
-   nav was unreachable on a phone. This injects a hamburger into
-   the topbar plus a tap-away scrim — no page markup required.
+   Below 1024px the sidebar is an off-canvas drawer (compat.css).
+   This injects the hamburger that opens it plus a tap-away scrim —
+   no page markup required. The button is display:none above that
+   breakpoint, where the sidebar is docked and a hamburger would
+   only be a second way to do nothing.
 ══════════════════════════════════════ */
 function initMobileNav() {
   var sidebar = document.querySelector(".sidebar");
   var left    = document.querySelector(".topbar-left");
   if (!sidebar || !left || left.querySelector(".mobile-nav-btn")) return;
 
+  if (!sidebar.id) sidebar.id = "app-sidebar";
+
   var burger = document.createElement("button");
   burger.type = "button";
   burger.className = "mobile-nav-btn";
-  burger.title = "Menu";
-  burger.setAttribute("aria-label", "Open navigation");
+  burger.setAttribute("aria-controls", sidebar.id);
   burger.innerHTML = '<i class="fa-solid fa-bars"></i>';
   left.insertBefore(burger, left.firstChild);
 
-  var scrim = document.createElement("div");
-  scrim.className = "sidebar-scrim";
-  document.body.appendChild(scrim);
-
-  function close() {
-    sidebar.classList.remove("mobile-open");
-    scrim.classList.remove("show");
+  var scrim = document.querySelector(".sidebar-scrim");
+  if (!scrim) {
+    scrim = document.createElement("div");
+    scrim.className = "sidebar-scrim";
+    document.body.appendChild(scrim);
   }
+
+  function setOpen(open) {
+    sidebar.classList.toggle("mobile-open", open);
+    scrim.classList.toggle("show", open);
+    /* Without this the page behind keeps scrolling under the
+       drawer, which reads as the drawer itself being broken. */
+    document.body.classList.toggle("nav-drawer-open", open);
+
+    burger.setAttribute("aria-expanded", open ? "true" : "false");
+    var label = open ? "Close navigation" : "Open navigation";
+    burger.title = label;
+    burger.setAttribute("aria-label", label);
+  }
+
+  function close() { setOpen(false); }
+
+  setOpen(false);
 
   burger.addEventListener("click", function (e) {
     e.stopPropagation();
-    var opening = !sidebar.classList.contains("mobile-open");
-    sidebar.classList.toggle("mobile-open", opening);
-    scrim.classList.toggle("show", opening);
+    setOpen(!sidebar.classList.contains("mobile-open"));
   });
 
   scrim.addEventListener("click", close);
@@ -276,7 +416,17 @@ function initMobileNav() {
   });
 
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") close();
+    if (e.key === "Escape" && sidebar.classList.contains("mobile-open")) {
+      close();
+      burger.focus();
+    }
+  });
+
+  /* Widening past the breakpoint docks the sidebar again. Leaving
+     the open state behind would strand a full-screen scrim over an
+     app that no longer has a drawer to dismiss. */
+  window.addEventListener("resize", function () {
+    if (window.innerWidth > 1024 && sidebar.classList.contains("mobile-open")) close();
   });
 }
 

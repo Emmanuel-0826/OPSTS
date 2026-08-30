@@ -38,6 +38,13 @@ router.post(
     rules.time("time"),
     body("platform").optional({ values: "falsy" }).isIn(PLATFORMS)
       .withMessage("Choose Zoom, Google Meet or In-Person."),
+    /* The request form has always offered a link field. Same rule as
+       on POST / — only http(s), because it ends up as a clickable
+       anchor in the supervisor's browser. */
+    body("link").optional({ values: "falsy" }).trim()
+      .isURL({ protocols: ["http", "https"], require_protocol: true })
+      .withMessage("A meeting link must be a full http(s) URL.")
+      .isLength({ max: 500 }).withMessage("That link is too long."),
     body("notes").optional({ values: "falsy" }).trim().isLength({ max: 2000 })
       .withMessage("Notes must be 2000 characters or fewer."),
     validate,

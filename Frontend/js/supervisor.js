@@ -131,12 +131,13 @@ async function initDashboard(user) {
           var d = new Date(m.date);
           var day = d.getDate();
           var mon = d.toLocaleString("en-GB", { month: "short" }).toUpperCase();
+          var esc = Utils.escapeHtml;
           return '<div class="meeting-card">' +
             '<div class="meeting-date-box"><div class="mday">' + day + '</div><div class="mmon">' + mon + "</div></div>" +
-            '<div class="meeting-info"><h4>' + m.title + "</h4>" +
-            '<div class="meeting-meta"><span><i class="fa-solid fa-clock"></i> ' + m.time + '</span><span><i class="fa-solid fa-stopwatch"></i> ' + m.duration + "</span></div>" +
-            '<div class="meeting-meta"><span><i class="fa-solid fa-video"></i> ' + m.platform + "</span></div>" +
-            (m.link ? '<a href="' + m.link + '" target="_blank" class="btn btn-primary btn-sm"><i class="fa-solid fa-link"></i> Join</a>' : "") +
+            '<div class="meeting-info"><h4>' + esc(m.title) + "</h4>" +
+            '<div class="meeting-meta"><span><i class="fa-solid fa-clock"></i> ' + esc(m.time) + '</span><span><i class="fa-solid fa-stopwatch"></i> ' + esc(m.duration) + "</span></div>" +
+            '<div class="meeting-meta"><span><i class="fa-solid fa-video"></i> ' + esc(m.platform) + "</span></div>" +
+            Utils.meetingJoin(m, false) +
             "</div></div>";
         }).join("");
   }
@@ -452,23 +453,89 @@ async function initSchedule(user) {
       el.innerHTML = '<div class="empty-state"><i class="fa-solid ' + (isPast ? "fa-clock-rotate-left" : "fa-calendar-days") + '"></i><p>' + (isPast ? "No past meetings." : "No upcoming meetings.") + "</p></div>";
       return;
     }
+    var esc = Utils.escapeHtml;
+
     el.innerHTML = meetings.map(function (m) {
       var d = new Date(m.date);
       var day = d.getDate();
       var mon = d.toLocaleString("en-GB", { month: "short" }).toUpperCase();
       var participantNames = (m.participants || []).map(function (p) { return p.name; }).join(", ");
-      var actionBtn = (!isPast && m.link)
-        ? '<a href="' + m.link + '" target="_blank" class="btn btn-primary btn-sm"><i class="fa-solid fa-link"></i> Join ' + m.platform + "</a>"
-        : isPast ? badge("Completed") : '<span class="badge badge-secondary"><i class="fa-solid fa-location-dot"></i> In-Person</span>';
+
+      /* Shared with the student portal, so both sides of a meeting
+         read the same state: a real Join link, In-Person, or
+         "Link pending". */
+      var actionBtn = Utils.meetingJoin(m, isPast);
+
+      /* The supervisor is the one who can do something about a
+         pending link, so they get the way to add it. Without this
+         the honest "Link pending" state is a dead end. */
+      var addLink = (!isPast && !Utils.safeUrl(m.link) && !Utils.isInPerson(m.platform))
+        ? '<div class="meeting-link-add">' +
+            '<button type="button" class="btn btn-ghost btn-sm" data-add-link="' + esc(m.id) + '">' +
+              '<i class="fa-solid fa-link"></i> Add link</button>' +
+            '<form class="meeting-link-form hidden" data-link-form="' + esc(m.id) + '">' +
+              '<input type="url" class="input-sm" name="link" placeholder="https://zoom.us/j/…" required />' +
+              '<button type="submit" class="btn btn-primary btn-sm">Save</button>' +
+            "</form>" +
+          "</div>"
+        : "";
 
       return '<div class="meeting-card' + (isPast ? " past-meeting-card" : "") + '">' +
         '<div class="meeting-date-box"><div class="mday">' + day + '</div><div class="mmon">' + mon + "</div></div>" +
-        '<div class="meeting-info"><h4>' + m.title + "</h4>" +
-        '<div class="meeting-meta"><span><i class="fa-solid fa-clock"></i> ' + m.time + '</span><span><i class="fa-solid fa-stopwatch"></i> ' + m.duration + "</span></div>" +
-        '<div class="meeting-meta"><span><i class="fa-solid fa-user-graduate"></i> ' + (participantNames || "–") + "</span></div>" +
-        '<div class="meeting-meta"><span><i class="fa-solid fa-video"></i> ' + m.platform + "</span></div>" +
-        actionBtn + "</div></div>";
+        '<div class="meeting-info"><h4>' + esc(m.title) + "</h4>" +
+        '<div class="meeting-meta"><span><i class="fa-solid fa-clock"></i> ' + esc(m.time) + '</span><span><i class="fa-solid fa-stopwatch"></i> ' + esc(m.duration) + "</span></div>" +
+        '<div class="meeting-meta"><span><i class="fa-solid fa-user-graduate"></i> ' + esc(participantNames || "–") + "</span></div>" +
+        '<div class="meeting-meta"><span><i class="fa-solid fa-video"></i> ' + esc(m.platform) + "</span></div>" +
+        actionBtn + addLink + "</div></div>";
     }).join("");
+
+    wireAddLink(el);
+  }
+
+  /* One flag for the whole page rather than one per card: a
+     background refresh must not repaint a form that is mid-save,
+     and two saves cannot be in flight at once anyway. */
+  var savingLink = false;
+
+  function wireAddLink(root) {
+    root.querySelectorAll("[data-add-link]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var form = root.querySelector('[data-link-form="' + CSS.escape(btn.dataset.addLink) + '"]');
+        if (!form) return;
+        btn.classList.add("hidden");
+        form.classList.remove("hidden");
+        var input = form.querySelector("input");
+        if (input) input.focus();
+      });
+    });
+
+    root.querySelectorAll("[data-link-form]").forEach(function (form) {
+      form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        if (savingLink) return;
+
+        var input = form.querySelector("input");
+        var save = form.querySelector("button[type=submit]");
+        var value = (input && input.value.trim()) || "";
+        if (!Utils.safeUrl(value)) {
+          showToast("Enter a full http(s) meeting link.", "warning");
+          return;
+        }
+
+        savingLink = true;
+        if (save) save.disabled = true;
+        try {
+          await Api.put("/meetings/" + form.dataset.linkForm, { link: value });
+          showToast("Meeting link added. Everyone invited has been notified.", "success", 4500);
+          await load();
+        } catch (err) {
+          apiErrorToast(err, "Could not save the meeting link.");
+        } finally {
+          savingLink = false;
+          if (save) save.disabled = false;
+        }
+      });
+    });
   }
 
   var stuSelect = document.getElementById("mtgStudents");
@@ -549,7 +616,7 @@ async function initNotifications(user) {
     listEl.innerHTML = notifs.map(function (n) {
       return '<div class="notif-item ' + (n.read ? "" : "unread") + '" data-id="' + n.id + '">' +
         '<span class="notif-icon">' + Utils.notifIcon(n.type) + "</span><div>" +
-        '<div class="notif-msg">' + n.message + "</div>" +
+        '<div class="notif-msg">' + Utils.escapeHtml(n.message) + "</div>" +
         '<div class="notif-time">' + Utils.formatDateTime(n.date) + "</div></div></div>";
     }).join("");
 

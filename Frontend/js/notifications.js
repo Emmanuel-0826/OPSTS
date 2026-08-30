@@ -2,20 +2,33 @@
    js/notifications.js — Real-Time Notification System
    OPSTS – Online Project Supervision & Tracking System
 
-   Now backed by the real API (GET/PATCH /api/notifications/*)
-   instead of the DB_NOTIFICATIONS mock array. Notifications
-   themselves are created server-side (on submission, feedback,
-   meeting scheduling, etc. — see the backend controllers), so
-   this file only reads/marks-read; it no longer needs a
-   client-side create() helper.
+   Backed by the real API (GET/PATCH /api/notifications/*).
+   Notifications are created server-side (on submission, feedback,
+   meeting scheduling, account approval — see the backend
+   controllers), so this file only reads and marks read.
 
    Provides:
    - NotificationSystem.init(userId)   — call once per page
    - NotificationSystem.markRead(id)
    - NotificationSystem.markAllRead()
    - NotificationSystem.destroy()
-   - Polling every 15s for new notifications (toast + badge update)
+   - Polling every 15s to keep the bell badge current
    - Bell dropdown panel
+
+   Two rules govern where a notification is allowed to appear:
+
+     1. The bell owns them. Nothing about a new notification is
+        allowed to interrupt the page — no toast, no banner. The
+        badge changes, and that is the whole announcement. Polling
+        used to fire a toast for every batch of new activity, which
+        put notification text at the bottom of the screen over
+        whatever the user was actually doing.
+
+     2. The panel is a popover, not page content. It lives in
+        <body> but is positioned against the bell and hidden until
+        .open. Give it no position and it lays out as the last
+        block in the document, which is how "the notifications are
+        printed at the bottom of every page" happens.
 ============================================================ */
 
 "use strict";
@@ -31,17 +44,28 @@ var NotificationSystem = (function () {
   var _POLL_MS      = 15000;
 
   /* ── Notification type config (Font Awesome) ──
-     `color` is the icon chip's fill and `fg` the glyph itself.
-     Both are design tokens rather than literals so the dropdown
-     follows the light/dark theme like the rest of the UI. */
+     The chip colour used to be written inline from
+     --primary-light / --secondary-light / --warning-light /
+     --danger-light / --gray-100. None of those tokens exist in
+     this design system, so every var() was invalid at computed-
+     value time: each icon rendered as an empty circle with an
+     invisible glyph. The colour now comes from a class, styled
+     in src/content.css out of the four status ramps the rest of
+     the app uses — which also makes it follow the dark theme. */
   var TYPE_CONFIG = {
-    submission: { icon: '<i class="fa-solid fa-upload"></i>',        color: "var(--primary-light)",   fg: "var(--primary)",   label: "Submission" },
-    feedback:   { icon: '<i class="fa-solid fa-comments"></i>',      color: "var(--secondary-light)", fg: "var(--secondary)", label: "Feedback"   },
-    meeting:    { icon: '<i class="fa-solid fa-calendar-days"></i>', color: "var(--warning-light)",   fg: "var(--warning)",   label: "Meeting"    },
-    deadline:   { icon: '<i class="fa-solid fa-clock"></i>',         color: "var(--danger-light)",    fg: "var(--danger)",    label: "Deadline"   },
-    approval:   { icon: '<i class="fa-solid fa-circle-check"></i>',  color: "var(--secondary-light)", fg: "var(--secondary)", label: "Approval"   },
-    system:     { icon: '<i class="fa-solid fa-bell"></i>',          color: "var(--gray-100)",        fg: "var(--gray-600)",  label: "System"     },
+    submission: { icon: '<i class="fa-solid fa-upload"></i>',        cls: "ntf-icon-info",   label: "Submission" },
+    feedback:   { icon: '<i class="fa-solid fa-comments"></i>',      cls: "ntf-icon-accent", label: "Feedback"   },
+    meeting:    { icon: '<i class="fa-solid fa-calendar-days"></i>', cls: "ntf-icon-warn",   label: "Meeting"    },
+    deadline:   { icon: '<i class="fa-solid fa-clock"></i>',         cls: "ntf-icon-risk",   label: "Deadline"   },
+    approval:   { icon: '<i class="fa-solid fa-circle-check"></i>',  cls: "ntf-icon-ok",     label: "Approval"   },
+    system:     { icon: '<i class="fa-solid fa-bell"></i>',          cls: "",               label: "System"     },
   };
+
+  /* Messages are composed server-side from names and chapter labels
+     that people typed, and they are written with innerHTML. */
+  function esc(value) {
+    return Utils.escapeHtml(value);
+  }
 
   /* ══════════════════════════════════════
      PUBLIC: init
@@ -55,16 +79,6 @@ var NotificationSystem = (function () {
     await _refreshUnreadCount();
     await _refreshDropdownList();
     _startPolling();
-
-    document.addEventListener("click", function (e) {
-      var dropdown = document.getElementById("ntf-dropdown");
-      var bell     = document.getElementById("ntf-bell-btn");
-      if (dropdown && bell &&
-          !dropdown.contains(e.target) &&
-          !bell.contains(e.target)) {
-        _closeDropdown();
-      }
-    });
   }
 
   /* ══════════════════════════════════════
@@ -73,7 +87,7 @@ var NotificationSystem = (function () {
   async function markRead(notifId) {
     try {
       await Api.patch("/notifications/" + notifId + "/read");
-      var n = _cache.find(function (x) { return x.id === notifId; });
+      var n = _cache.find(function (x) { return String(x.id) === String(notifId); });
       if (n) n.read = true;
       await _refreshUnreadCount();
       _renderDropdownList();
@@ -91,10 +105,9 @@ var NotificationSystem = (function () {
       _cache.forEach(function (n) { n.read = true; });
       await _refreshUnreadCount();
       _renderDropdownList();
-      if (typeof showToast === "function") {
-        showToast("All notifications marked as read.", "success");
-      }
     } catch (err) {
+      /* A failure here is the one case worth surfacing: the user
+         pressed a button and it did not do what it said. */
       if (typeof showToast === "function") {
         showToast(err.message || "Could not mark notifications as read.", "error");
       }
@@ -112,7 +125,9 @@ var NotificationSystem = (function () {
   }
 
   /* ══════════════════════════════════════
-     PRIVATE: polling for new notifications
+     PRIVATE: polling
+     Badge only. See rule 1 at the top of this file — a poll must
+     never put a message on screen.
   ══════════════════════════════════════ */
   function _startPolling() {
     if (_pollInterval) clearInterval(_pollInterval);
@@ -122,17 +137,9 @@ var NotificationSystem = (function () {
         var res     = await Api.get("/notifications/unread-count");
         var current = res.count;
 
-        if (current > _lastCount) {
-          var diff = current - _lastCount;
-          if (typeof showToast === "function") {
-            showToast(
-              '<i class="fa-solid fa-bell"></i> You have ' + diff + " new notification" + (diff > 1 ? "s" : "") + ".",
-              "info",
-              4000
-            );
-          }
-          await _refreshDropdownList();
-        }
+        /* Only re-fetch the list when the count actually moved; the
+           panel refreshes itself on open anyway. */
+        if (current !== _lastCount) await _refreshDropdownList();
 
         _lastCount = current;
         _updateBadges(current);
@@ -158,7 +165,7 @@ var NotificationSystem = (function () {
   async function _refreshDropdownList() {
     try {
       var res = await Api.get("/notifications");
-      _cache = res.notifications;
+      _cache = res.notifications || [];
       _renderDropdownList();
     } catch (err) {
       /* ignore */
@@ -172,15 +179,24 @@ var NotificationSystem = (function () {
     /* The dropdown used to ship its own <style> block, injected here
        at runtime with colours hard-coded to #fff — which meant it
        ignored the dark theme entirely. Those rules now live in
-       src/components.css (#ntf-dropdown and .ntf-drop-*), so they
+       src/content.css (#ntf-dropdown and .ntf-drop-*), so they
        are built with the rest of the stylesheet and theme correctly. */
+
+    if (document.getElementById("ntf-dropdown")) return;
+
+    /* No bell means no way to open or close the panel, so building
+       it would only leave an unreachable element in the document. */
+    var bellBtn = document.getElementById("notifBtn") || document.getElementById("ntf-bell-btn");
+    if (!bellBtn) return;
 
     var dropdown = document.createElement("div");
     dropdown.id  = "ntf-dropdown";
+    dropdown.setAttribute("role", "dialog");
+    dropdown.setAttribute("aria-label", "Notifications");
     dropdown.innerHTML =
       '<div class="ntf-drop-header">' +
       '<h4><i class="fa-solid fa-bell"></i>Notifications</h4>' +
-      '<button id="ntf-mark-all">Mark all as read</button>' +
+      '<button type="button" id="ntf-mark-all">Mark all as read</button>' +
       "</div>" +
       '<div class="ntf-drop-list" id="ntf-drop-list"></div>' +
       '<div class="ntf-drop-footer">' +
@@ -196,14 +212,37 @@ var NotificationSystem = (function () {
       });
     }
 
-    var bellBtn = document.getElementById("notifBtn");
-    if (bellBtn) {
-      bellBtn.id = "ntf-bell-btn";
-      bellBtn.addEventListener("click", function (e) {
-        e.stopPropagation();
-        _toggleDropdown();
-      });
-    }
+    bellBtn.id = "ntf-bell-btn";
+    bellBtn.setAttribute("aria-haspopup", "dialog");
+    bellBtn.setAttribute("aria-expanded", "false");
+    bellBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      _toggleDropdown();
+    });
+
+    /* Click-away, Escape and reflow are wired once, here, rather
+       than once per init() call. */
+    document.addEventListener("click", function (e) {
+      if (!_dropdownOpen) return;
+      if (dropdown.contains(e.target) || bellBtn.contains(e.target)) return;
+      _closeDropdown();
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && _dropdownOpen) {
+        _closeDropdown();
+        bellBtn.focus();
+      }
+    });
+
+    /* The panel is anchored to the bell in viewport coordinates, so
+       anything that moves the bell has to move the panel too. */
+    window.addEventListener("resize", function () {
+      if (_dropdownOpen) _positionDropdown();
+    });
+    window.addEventListener("scroll", function () {
+      if (_dropdownOpen) _positionDropdown();
+    }, true);
   }
 
   /* ══════════════════════════════════════
@@ -221,11 +260,11 @@ var NotificationSystem = (function () {
 
     listEl.innerHTML = _cache.slice(0, 10).map(function (n) {
       var cfg = TYPE_CONFIG[n.type] || TYPE_CONFIG.system;
-      return '<div class="ntf-drop-item ' + (n.read ? "" : "unread") + '" data-ntf-id="' + n.id + '">' +
-        '<div class="ntf-drop-icon" style="background:' + cfg.color + ';color:' + cfg.fg + ';">' + cfg.icon + "</div>" +
-        '<div style="flex:1;">' +
-        '<div class="ntf-drop-msg">' + n.message + "</div>" +
-        '<div class="ntf-drop-time">' + Utils.timeAgo(n.date) + "</div>" +
+      return '<div class="ntf-drop-item ' + (n.read ? "" : "unread") + '" data-ntf-id="' + esc(n.id) + '">' +
+        '<div class="ntf-drop-icon ' + cfg.cls + '">' + cfg.icon + "</div>" +
+        '<div style="flex:1;min-width:0;">' +
+        '<div class="ntf-drop-msg">' + esc(n.message) + "</div>" +
+        '<div class="ntf-drop-time">' + esc(Utils.timeAgo(n.date)) + "</div>" +
         "</div>" +
         (!n.read ? '<div class="ntf-unread-dot"></div>' : "") +
         "</div>";
@@ -233,7 +272,24 @@ var NotificationSystem = (function () {
 
     listEl.querySelectorAll(".ntf-drop-item").forEach(function (item) {
       item.addEventListener("click", function () {
-        markRead(item.dataset.ntfId);
+        var id = item.dataset.ntfId;
+        var n  = _cache.find(function (x) { return String(x.id) === String(id); });
+
+        /* Mark read, then follow the notification where it points.
+           The row was a dead end before: it cleared its own badge
+           and left the user to go and find the meeting or the
+           feedback themselves. `link` is a bare page name written
+           by the backend ("feedback.html"), and each portal keeps
+           its pages in one folder, so it resolves as a sibling.
+           Anything that is not a plain page name is ignored rather
+           than navigated to. */
+        markRead(id);
+        _closeDropdown();
+
+        var target = n && n.link;
+        if (target && /^[\w.-]+\.html$/.test(target)) {
+          window.location.href = target;
+        }
       });
     });
   }
@@ -246,21 +302,53 @@ var NotificationSystem = (function () {
     else _openDropdown();
   }
 
+  /** Hang the panel off the bell, clamped to the viewport. */
+  function _positionDropdown() {
+    var dropdown = document.getElementById("ntf-dropdown");
+    var bell     = document.getElementById("ntf-bell-btn");
+    if (!dropdown || !bell) return;
+
+    var rect = bell.getBoundingClientRect();
+    var gap  = 8;
+
+    dropdown.style.top = (rect.bottom + gap) + "px";
+
+    /* Below 640px the stylesheet pins the panel to both edges as a
+       sheet; setting `right` here would fight it. */
+    if (window.matchMedia("(max-width: 640px)").matches) {
+      dropdown.style.right = "";
+      return;
+    }
+
+    /* Right-aligned to the bell — `right` is measured from the
+       right edge of the viewport, which is what the bell's own
+       distance from that edge gives us. */
+    dropdown.style.right = Math.max(gap, window.innerWidth - rect.right) + "px";
+  }
+
   function _openDropdown() {
     var dropdown = document.getElementById("ntf-dropdown");
-    if (dropdown) {
-      dropdown.classList.add("open");
-      _dropdownOpen = true;
-      _refreshDropdownList();
-    }
+    if (!dropdown) return;
+
+    _positionDropdown();
+    dropdown.classList.add("open");
+    _dropdownOpen = true;
+
+    var bell = document.getElementById("ntf-bell-btn");
+    if (bell) bell.setAttribute("aria-expanded", "true");
+
+    _refreshDropdownList();
   }
 
   function _closeDropdown() {
     var dropdown = document.getElementById("ntf-dropdown");
-    if (dropdown) {
-      dropdown.classList.remove("open");
-      _dropdownOpen = false;
-    }
+    if (!dropdown) return;
+
+    dropdown.classList.remove("open");
+    _dropdownOpen = false;
+
+    var bell = document.getElementById("ntf-bell-btn");
+    if (bell) bell.setAttribute("aria-expanded", "false");
   }
 
   /* ══════════════════════════════════════

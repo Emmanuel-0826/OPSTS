@@ -28,6 +28,25 @@ async function start() {
   await bootstrap.ensureDefaultAdmin();
   await bootstrap.warnAboutDefaultCredentials();
 
+  /* Say plainly, once, whether mail can leave the building.
+
+     Every email in this app is deliberately fire-and-forget: the
+     account approval, the feedback, the meeting invite and the
+     submission receipt all commit first and mail afterwards, and
+     none of them fail if the mail does. That is the right trade —
+     but it also means an unconfigured SMTP host is completely
+     silent at the point of use. Every action reports success and
+     nothing is ever delivered. Print the state at boot so the
+     answer to "why did nobody get an email?" is in the log. */
+  const email = require("./services/email");
+  // eslint-disable-next-line no-console
+  console.log(
+    email.isConfigured
+      ? `[email] SMTP configured (${config.email.host}:${config.email.port}) — notification emails will be sent`
+      : "[email] SMTP not configured (EMAIL_HOST/EMAIL_USER are unset) — " +
+        "notification emails will be logged to this console, not delivered"
+  );
+
   /* Require the app only after the database is known-good, so a
      boot-time crash is always a clear config/db message. */
   const app = require("./app");

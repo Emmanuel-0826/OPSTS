@@ -147,6 +147,91 @@ const Utils = {
     return icons[type] || '<i class="fa-solid fa-bell"></i>';
   },
 
+  // ─────────────────────────────────────────
+  // ESCAPING
+  // Most of this app renders with innerHTML from strings the
+  // portal scripts concatenate, and a good half of what goes into
+  // those strings is typed by a user — project titles, meeting
+  // agendas, chapter labels, notification text built from names.
+  // Anything interpolated into markup goes through here first.
+  // ─────────────────────────────────────────
+
+  /** HTML-escape a value for interpolation into markup. */
+  escapeHtml(value) {
+    const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+    return String(value === null || value === undefined ? "" : value)
+      .replace(/[&<>"']/g, (c) => map[c]);
+  },
+
+  /**
+   * A URL that is safe to put in an href, or null.
+   *
+   * Meeting join links are pasted in by supervisors, so they can be
+   * anything at all — including `javascript:`, which in an
+   * innerHTML-built anchor is a script that runs in this origin
+   * with the signed-in user's session. Only http(s) survives.
+   */
+  safeUrl(value) {
+    const raw = String(value === null || value === undefined ? "" : value).trim();
+    if (!raw) return null;
+    try {
+      const parsed = new URL(raw, window.location.href);
+      return (parsed.protocol === "http:" || parsed.protocol === "https:")
+        ? parsed.href
+        : null;
+    } catch (err) {
+      return null;
+    }
+  },
+
+
+  // ─────────────────────────────────────────
+  // MEETINGS
+  // ─────────────────────────────────────────
+
+  /** True for a platform that happens in a room, not a browser. */
+  isInPerson(platform) {
+    return /in[\s-]?person/i.test(String(platform || ""));
+  },
+
+  /**
+   * The join control for a meeting card, in three honest states.
+   *
+   *   link present      → a real anchor: "Join Zoom"
+   *   In-Person         → the location badge
+   *   remote, no link   → "Link pending"
+   *
+   * The third state is the one that was missing. Both portals fell
+   * through to the In-Person badge whenever `link` was empty, so a
+   * Zoom meeting whose link had not been generated yet told the
+   * student to turn up in person — for a meeting with no room.
+   *
+   * target=_blank without rel=noopener hands the opened tab a
+   * window.opener it can navigate this one with.
+   */
+  meetingJoin(meeting, isPast) {
+    const m = meeting || {};
+    if (isPast) return this.badge("Completed");
+
+    const platform = String(m.platform || "").trim();
+
+    if (this.isInPerson(platform)) {
+      return '<span class="badge badge-secondary">' +
+        '<i class="fa-solid fa-location-dot"></i> In-Person</span>';
+    }
+
+    const href = this.safeUrl(m.link);
+    if (href) {
+      return '<a class="btn btn-primary btn-sm" href="' + this.escapeHtml(href) + '"' +
+        ' target="_blank" rel="noopener noreferrer">' +
+        '<i class="fa-solid fa-video"></i> Join ' +
+        this.escapeHtml(platform || "meeting") + "</a>";
+    }
+
+    return '<span class="badge badge-warning" title="No joining link has been added to this meeting yet.">' +
+      '<i class="fa-solid fa-hourglass-half"></i> Link pending</span>';
+  },
+
 
   // ─────────────────────────────────────────
   // DOM HELPERS

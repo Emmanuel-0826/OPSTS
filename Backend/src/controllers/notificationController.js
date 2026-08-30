@@ -19,24 +19,35 @@ const MAX_LIMIT = 200;
 
 /* ══════════════════════════════════════
    GET /api/notifications
-   ?scope=all    — admin only, system-wide feed
    ?unreadOnly=1 — just the unread ones
    ?limit=       — capped at 200
+
+   Always and only the caller's own notifications, for every role
+   including admin.
+
+   There used to be a ?scope=all that returned every row in the
+   table to an administrator, and the admin portal's notification
+   page used it. A notification is not an audit record: it is one
+   half of a private exchange — "your Chapter 3 was rejected",
+   "your meeting request was declined" — addressed to one person
+   by name. Handing the whole table to an admin turned a bell into
+   a surveillance feed over students and supervisors who had no
+   idea it was being read.
+
+   It was also broken in a way that gave the game away: the rows
+   rendered, but clicking one did nothing, because PATCH
+   /notifications/:id/read scopes by user_id and quietly 404s on
+   somebody else's row. The feed could be read and not acted on,
+   which is the definition of the wrong feature.
+
+   Admins who need a system-wide view of activity have the audit
+   trail and the reports endpoints, which exist for exactly that
+   and name no private message.
 ══════════════════════════════════════ */
 const listNotifications = catchAsync(async (req, res) => {
-  const wantsAll = req.query.scope === "all";
+  const conditions = ["n.user_id = $1"];
+  const params = [req.user.id];
 
-  if (wantsAll && req.user.role !== "admin") {
-    throw ApiError.forbidden("Only administrators can view system-wide notifications.");
-  }
-
-  const conditions = [];
-  const params = [];
-
-  if (!wantsAll) {
-    params.push(req.user.id);
-    conditions.push(`n.user_id = $${params.length}`);
-  }
   if (req.query.unreadOnly === "1" || req.query.unreadOnly === "true") {
     conditions.push("n.read = FALSE");
   }
@@ -47,12 +58,10 @@ const listNotifications = catchAsync(async (req, res) => {
   );
   params.push(limit);
 
-  const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
-
   const { rows } = await db.query(
     `SELECT n.id, n.user_id, n.type, n.message, n.link, n.read, n.created_at
        FROM notifications n
-       ${where}
+      WHERE ${conditions.join(" AND ")}
       ORDER BY n.created_at DESC
       LIMIT $${params.length}`,
     params

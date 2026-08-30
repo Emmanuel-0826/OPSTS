@@ -12,7 +12,7 @@
 const db = require("../config/db");
 const ApiError = require("../utils/ApiError");
 const catchAsync = require("../utils/catchAsync");
-const { toMeeting } = require("../utils/presenters");
+const { toMeeting, dateOnly } = require("../utils/presenters");
 const notifications = require("../services/notificationService");
 const email = require("../services/email");
 const { resolveMeetingLink } = require("../services/meetingLinkService");
@@ -217,10 +217,14 @@ const createMeeting = catchAsync(async (req, res) => {
 
 /* ══════════════════════════════════════
    POST /api/meetings/request   (student)
-   Body: topic, date, time, platform, notes
+   Body: topic, date, time, platform, link, notes
 ══════════════════════════════════════ */
 const requestMeeting = catchAsync(async (req, res) => {
   const { topic, date, time, platform, notes } = req.body;
+  /* The request form has always had a link field and the controller
+     never read it, so a student who pasted their own room URL saw it
+     silently dropped and the meeting arrived with no way to join. */
+  const link = req.body.link || null;
 
   const result = await db.withTransaction(async (client) => {
     const { rows: projectRows } = await client.query(
@@ -243,10 +247,10 @@ const requestMeeting = catchAsync(async (req, res) => {
     const { rows } = await client.query(
       `INSERT INTO meetings
          (title, supervisor_id, organizer_id, scheduled_date, scheduled_time,
-          duration, platform, notes, meeting_type, status)
-       VALUES ($1, $2, $3, $4, $5, '1 hour', $6, $7, 'Requested', 'Upcoming')
+          duration, platform, link, notes, meeting_type, status)
+       VALUES ($1, $2, $3, $4, $5, '1 hour', $6, $7, $8, 'Requested', 'Upcoming')
        RETURNING id`,
-      [topic, project.supervisor_id, req.user.id, date, time, platform || "Zoom", notes || null]
+      [topic, project.supervisor_id, req.user.id, date, time, platform || "Zoom", link, notes || null]
     );
 
     const studentName = `${req.user.first_name} ${req.user.last_name}`;
@@ -275,6 +279,7 @@ const requestMeeting = catchAsync(async (req, res) => {
         lines: [
           `${result.studentName} has requested a meeting.`,
           `${topic} — proposed for ${date} at ${time}, via ${platform || "Zoom"}.`,
+          link ? `They suggested this link: ${link}` : "",
           notes ? `Notes: ${notes}` : "",
         ].filter(Boolean),
         ctaLabel: "Open schedule",
@@ -292,11 +297,15 @@ const requestMeeting = catchAsync(async (req, res) => {
 
 /**
  * A meeting the caller may modify: its supervisor, its organiser,
- * or an admin.
+ * or an admin. Takes an executor so it can be used both for the
+ * pre-flight read (on the pool) and for the authoritative check
+ * inside the transaction.
  */
-async function loadMeetingForEdit(client, meetingId, user) {
-  const { rows } = await client.query(
-    "SELECT id, title, supervisor_id, organizer_id, status, platform, link FROM meetings WHERE id = $1",
+async function loadMeetingForEdit(executor, meetingId, user) {
+  const { rows } = await executor.query(
+    `SELECT id, title, supervisor_id, organizer_id, status, platform, link,
+            scheduled_date, scheduled_time, duration, notes, meeting_type
+       FROM meetings WHERE id = $1`,
     [meetingId]
   );
   const meeting = rows[0];
@@ -311,6 +320,18 @@ async function loadMeetingForEdit(client, meetingId, user) {
   return meeting;
 }
 
+/** Everyone invited except the person making the change. */
+async function loadRecipients(executor, meetingId, excludeUserId) {
+  const { rows } = await executor.query(
+    `SELECT u.id, u.first_name, u.email, u.role
+       FROM meeting_participants mp
+       JOIN users u ON u.id = mp.user_id
+      WHERE mp.meeting_id = $1 AND u.id <> $2`,
+    [meetingId, excludeUserId]
+  );
+  return rows;
+}
+
 /* ══════════════════════════════════════
    PUT /api/meetings/:id
    Confirm a requested meeting, move it, change the link or status.
@@ -318,7 +339,45 @@ async function loadMeetingForEdit(client, meetingId, user) {
 const updateMeeting = catchAsync(async (req, res) => {
   const meetingId = req.params.id;
 
-  const meeting = await db.withTransaction(async (client) => {
+  /* Read once before opening the transaction. Confirming a request
+     can involve a Zoom round trip, and an outbound HTTP call has no
+     business holding a database transaction open while it waits —
+     the permission check is repeated inside, on the same row. */
+  const before = await loadMeetingForEdit(db, meetingId, req.user);
+
+  const nextPlatform = req.body.platform !== undefined ? req.body.platform : before.platform;
+
+  /* Confirming a student's request is the moment the meeting becomes
+     real, so it is also the moment it needs somewhere to happen.
+     Only when nobody has supplied a link and the meeting is not
+     in person; resolveMeetingLink never throws and returns a null
+     link rather than inventing one that leads nowhere. */
+  const shouldGenerateLink =
+    req.body.confirm === true &&
+    !req.body.link &&
+    !before.link &&
+    nextPlatform !== "In-Person";
+
+  let generatedLink = null;
+  let generatedZoomId = null;
+  let linkWarning = null;
+
+  if (shouldGenerateLink) {
+    const resolved = await resolveMeetingLink({
+      platform: nextPlatform,
+      providedLink: null,
+      title: req.body.title || before.title,
+      date: req.body.date || dateOnly(before.scheduled_date),
+      time: req.body.time || before.scheduled_time,
+      duration: req.body.duration || before.duration,
+      notes: req.body.notes !== undefined ? req.body.notes : before.notes,
+    });
+    generatedLink = resolved.link;
+    generatedZoomId = resolved.meetingId;
+    linkWarning = resolved.warning;
+  }
+
+  const outcome = await db.withTransaction(async (client) => {
     const existing = await loadMeetingForEdit(client, meetingId, req.user);
 
     const updates = {};
@@ -338,6 +397,11 @@ const updateMeeting = catchAsync(async (req, res) => {
     /* Confirming a student's request turns it into a scheduled meeting. */
     if (req.body.confirm === true) updates.meeting_type = "Scheduled";
 
+    if (generatedLink) {
+      updates.link = generatedLink;
+      if (generatedZoomId) updates.zoom_meeting_id = generatedZoomId;
+    }
+
     if (Object.keys(updates).length === 0) {
       throw ApiError.badRequest("There is nothing to update.");
     }
@@ -350,31 +414,105 @@ const updateMeeting = catchAsync(async (req, res) => {
       ...columns.map((c) => updates[c]),
     ]);
 
-    const { rows: participants } = await client.query(
-      "SELECT user_id FROM meeting_participants WHERE meeting_id = $1",
-      [meetingId]
-    );
-    const recipients = participants.map((p) => p.user_id).filter((id) => id !== req.user.id);
+    const recipients = await loadRecipients(client, meetingId, req.user.id);
+    const recipientIds = recipients.map((r) => r.id);
+
+    const title = updates.title || existing.title;
+    const linkAfter = updates.link !== undefined ? updates.link : existing.link;
+    /* A link appearing on a meeting that had none is news in its own
+       right — it is the difference between "we are meeting" and
+       "here is where". */
+    const linkAdded = Boolean(!existing.link && linkAfter);
+
+    let event = null;
 
     if (updates.status === "Cancelled") {
-      await notifications.notifyMany(client, recipients, {
+      event = "cancelled";
+      await notifications.notifyMany(client, recipientIds, {
         type: "meeting",
-        message: `The meeting "${updates.title || existing.title}" has been cancelled.`,
+        message: `The meeting "${title}" has been cancelled.`,
         link: "meetings.html",
       });
     } else if (req.body.confirm === true) {
-      await notifications.notifyMany(client, recipients, {
+      event = "confirmed";
+      await notifications.notifyMany(client, recipientIds, {
         type: "meeting",
-        message: `Your meeting request "${updates.title || existing.title}" has been confirmed.`,
+        message: `Your meeting request "${title}" has been confirmed.`,
+        link: "meetings.html",
+      });
+    } else if (linkAdded) {
+      event = "link";
+      await notifications.notifyMany(client, recipientIds, {
+        type: "meeting",
+        message: `A joining link has been added to "${title}".`,
         link: "meetings.html",
       });
     }
 
-    return loadMeeting(client, meetingId);
+    return {
+      meeting: await loadMeeting(client, meetingId),
+      recipients,
+      event,
+      title,
+      linkAfter,
+      platform: updates.platform || existing.platform,
+    };
   });
 
-  res.json({ success: true, message: "Meeting updated.", meeting: toMeeting(meeting) });
+  /* Mail after the commit, never inside it: a mail server that is
+     slow or down must not be able to roll back a confirmed meeting. */
+  if (outcome.event) sendMeetingUpdateEmails(outcome);
+
+  res.json({
+    success: true,
+    message: linkWarning ? `Meeting updated. ${linkWarning}` : "Meeting updated.",
+    warning: linkWarning || undefined,
+    meeting: toMeeting(outcome.meeting),
+  });
 });
+
+/** Fire-and-forget mail for a confirmed, cancelled or newly-linked meeting. */
+function sendMeetingUpdateEmails({ recipients, event, title, linkAfter, platform, meeting }) {
+  const when = `${dateOnly(meeting.scheduled_date)} at ${meeting.scheduled_time}`;
+
+  const copy = {
+    confirmed: {
+      subject: `Meeting confirmed: ${title}`,
+      lines: [`Your meeting request has been confirmed.`, `${title} — ${when}, via ${platform}.`],
+    },
+    cancelled: {
+      subject: `Meeting cancelled: ${title}`,
+      lines: [`The meeting "${title}" scheduled for ${when} has been cancelled.`],
+    },
+    link: {
+      subject: `Joining link added: ${title}`,
+      lines: [`A joining link has been added to "${title}" (${when}).`],
+    },
+  }[event];
+
+  if (!copy) return;
+
+  for (const person of recipients) {
+    if (!person.email) continue;
+    email
+      .activityAlert({
+        to: person.email,
+        name: person.first_name,
+        subject: copy.subject,
+        lines: copy.lines
+          .concat(event !== "cancelled" && linkAfter ? [`Join link: ${linkAfter}`] : [])
+          .filter(Boolean),
+        ctaLabel: "View meetings",
+        /* Supervisors can be on the receiving end too — a student
+           may move or cancel their own request — and the two
+           portals keep their meeting pages in different folders. */
+        ctaPath: person.role === "supervisor"
+          ? "pages/supervisor/schedule.html"
+          : "pages/Student/meetings.html",
+      })
+      .catch(() => {});
+  }
+}
 
 /* ══════════════════════════════════════
    DELETE /api/meetings/:id

@@ -983,17 +983,34 @@
 /* ══════════════════════════════════════
    PAGE HEADER
 ══════════════════════════════════════ */
+/* Title, description and actions. The description belongs under
+   the title, not opposite it — as a `space-between` flex row with
+   `h1 + p` (which is what all 21 portal pages are) it threw the
+   two to opposite edges of the page, leaving 600px of nothing
+   between a heading and its own sentence. Grid keeps them one
+   block and still parks the actions on the right. */
 .page-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-16);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--space-6) var(--space-16);
+}
+.page-header > h1,
+.page-header > h2,
+.page-header > p {
+  grid-column: 1;
 }
 .page-header-actions {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  align-self: center;
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-8);
+}
+@media (max-width: 640px) {
+  .page-header { grid-template-columns: minmax(0, 1fr); }
+  .page-header-actions { grid-column: 1; grid-row: auto; align-self: start; }
 }
 
 /* ══════════════════════════════════════

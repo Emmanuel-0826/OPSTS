@@ -179,9 +179,16 @@ const createSubmission = catchAsync(async (req, res) => {
         rows[0].id,
       ]);
 
-      return { submission: full[0], project, version, label, studentName };
+      const supervisorName = [project.supervisor_first_name, project.supervisor_last_name]
+        .filter(Boolean)
+        .join(" ");
+
+      return { submission: full[0], project, version, label, studentName, supervisorName };
     });
 
+    /* Mail after the commit and without awaiting it: SMTP is an
+       enhancement to the in-app notification, never a reason for a
+       successful upload to report failure. */
     if (result.project.supervisor_email) {
       email
         .activityAlert({
@@ -194,6 +201,29 @@ const createSubmission = catchAsync(async (req, res) => {
           ],
           ctaLabel: "Review submission",
           ctaPath: "pages/supervisor/review.html",
+        })
+        .catch(() => {});
+    }
+
+    /* The student gets a receipt of their own. A chapter upload is
+       the moment in this system with the most riding on it and the
+       least visible confirmation — the page shows a toast that is
+       gone in four seconds, and nothing else says it arrived. */
+    if (req.user.email) {
+      email
+        .activityAlert({
+          to: req.user.email,
+          name: req.user.first_name,
+          subject: `${result.label} submitted (version ${result.version})`,
+          lines: [
+            `We have received your ${result.label} submission.`,
+            `File: ${file.originalname} — version ${result.version}, submitted ${new Date().toLocaleString("en-GB")}.`,
+            result.supervisorName
+              ? `${result.supervisorName} has been notified and will review it.`
+              : "It will be reviewed once a supervisor is assigned to your project.",
+          ],
+          ctaLabel: "View my submissions",
+          ctaPath: "pages/Student/submissions.html",
         })
         .catch(() => {});
     }

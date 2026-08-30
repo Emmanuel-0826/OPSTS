@@ -67,21 +67,22 @@ function renderMeetingCard(m, isPast) {
   var d   = new Date(m.date);
   var day = d.getDate();
   var mon = d.toLocaleString("en-GB", { month: "short" }).toUpperCase();
-  var joinBtn = (!isPast && m.link)
-    ? '<a href="' + m.link + '" target="_blank" class="btn btn-primary btn-sm"><i class="fa-solid fa-link"></i> Join</a>'
-    : isPast
-      ? badge("Completed")
-      : '<span class="badge badge-secondary"><i class="fa-solid fa-location-dot"></i> In-Person</span>';
+  var esc = Utils.escapeHtml;
+
+  /* Utils.meetingJoin is shared with the supervisor portal so both
+     sides of a meeting see the same three states — a real Join
+     link, In-Person, or "Link pending". */
+  var joinBtn = Utils.meetingJoin(m, isPast);
 
   return '<div class="meeting-card' + (isPast ? " past-meeting-card" : "") + '">' +
     '<div class="meeting-date-box"><div class="mday">' + day + '</div><div class="mmon">' + mon + '</div></div>' +
     '<div class="meeting-info">' +
-    '<h4>' + m.title + '</h4>' +
-    '<div class="meeting-meta"><span><i class="fa-solid fa-clock"></i> ' + m.time + '</span><span><i class="fa-solid fa-stopwatch"></i> ' + m.duration + '</span><span>' + m.type + '</span></div>' +
-    '<div class="meeting-meta"><span><i class="fa-solid fa-video"></i> ' + m.platform + '</span></div>' +
-    (m.notes ? '<div class="meeting-meta"><span><i class="fa-regular fa-note-sticky"></i> ' + m.notes + '</span></div>' : "") +
+    "<h4>" + esc(m.title) + "</h4>" +
+    '<div class="meeting-meta"><span><i class="fa-solid fa-clock"></i> ' + esc(m.time) + '</span><span><i class="fa-solid fa-stopwatch"></i> ' + esc(m.duration) + "</span><span>" + esc(m.type) + "</span></div>" +
+    '<div class="meeting-meta"><span><i class="fa-solid fa-video"></i> ' + esc(m.platform) + "</span></div>" +
+    (m.notes ? '<div class="meeting-meta"><span><i class="fa-regular fa-note-sticky"></i> ' + esc(m.notes) + "</span></div>" : "") +
     joinBtn +
-    '</div></div>';
+    "</div></div>";
 }
 
 /* ══════════════════════════════════════
@@ -448,6 +449,11 @@ async function initMeetings(user) {
       var time     = document.getElementById("mtgTime").value;
       var platform = document.getElementById("mtgPlatform").value;
       var notes    = document.getElementById("mtgNotes").value.trim();
+      /* The form has always had a link field; nothing read it, so
+         a student who pasted their own room URL watched it vanish
+         and the meeting came out with no way to join. */
+      var linkEl   = document.getElementById("mtgLink");
+      var link     = linkEl ? linkEl.value.trim() : "";
 
       if (!topic || !date || !time) {
         showToast("Please fill in all required fields.", "warning");
@@ -459,7 +465,10 @@ async function initMeetings(user) {
       submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending…';
 
       try {
-        await Api.post("/meetings/request", { topic: topic, date: date, time: time, platform: platform, notes: notes });
+        await Api.post("/meetings/request", {
+          topic: topic, date: date, time: time,
+          platform: platform, link: link || null, notes: notes,
+        });
         closeModal("meetingModal");
         showToast("Meeting request sent to your supervisor.", "success", 4500);
         document.getElementById("meetingRequestForm").reset();
@@ -496,7 +505,7 @@ async function initNotifications(user) {
       return '<div class="notif-item ' + (n.read ? "" : "unread") + '" data-id="' + n.id + '">' +
         '<span class="notif-icon">' + Utils.notifIcon(n.type) + "</span>" +
         "<div>" +
-        '<div class="notif-msg">' + n.message + "</div>" +
+        '<div class="notif-msg">' + Utils.escapeHtml(n.message) + "</div>" +
         '<div class="notif-time">' + Utils.formatDateTime(n.date) + "</div>" +
         "</div></div>";
     }).join("");
