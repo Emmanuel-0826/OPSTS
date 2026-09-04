@@ -205,9 +205,16 @@ async function initUsers(user) {
 
     tbody.innerHTML = allUsers.map(function (u) {
       var idStr = u.indexNumber || u.staffId || "–";
+      /* A student's registered topic becomes their project title on
+         approval, so the admin sees what they are approving before
+         they approve it. Free text, so it is escaped. */
+      var topicLine = u.projectTopic
+        ? "<div style='font-size:var(--font-size-xs);color:var(--gray-600);'>" +
+          Utils.escapeHtml(u.projectTopic) + "</div>"
+        : "";
       return "<tr>" +
         "<td><div style='display:flex;align-items:center;gap:10px;'>" + makeAvatar(u.name, "32px", "0.75rem") +
-        "<span style='font-weight:600;'>" + u.name + "</span></div></td>" +
+        "<div><span style='font-weight:600;'>" + u.name + "</span>" + topicLine + "</div></div></td>" +
         "<td>" + badge(Utils.titleCase(u.role)) + "</td>" +
         "<td>" + idStr + "</td>" +
         "<td>" + (u.department || "–") + "</td>" +
@@ -561,6 +568,38 @@ async function initReports() {
     var el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   }
+
+  /* The export is an authenticated stream, not a link — the reports
+     routes are admin-only and a plain <a href> carries no token. One
+     download at a time, and the button says so while it runs: these
+     queries cover every project in the system and a second click
+     would just start the same work again. */
+  var downloading = false;
+
+  document.querySelectorAll("[data-export]").forEach(function (btn) {
+    btn.addEventListener("click", async function () {
+      if (downloading) return;
+      downloading = true;
+
+      var original = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Preparing…';
+
+      try {
+        var name = await Api.download(
+          "/reports/export/" + btn.dataset.export,
+          btn.dataset.export + "-report.csv"
+        );
+        showToast("Downloaded " + name, "success", 4000);
+      } catch (err) {
+        apiErrorToast(err, "Could not download that report.");
+      } finally {
+        downloading = false;
+        btn.disabled = false;
+        btn.innerHTML = original;
+      }
+    });
+  });
 
   try {
     var results = await Promise.all([

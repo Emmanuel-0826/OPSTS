@@ -23,6 +23,20 @@ const student = {
   firstName: "Kofi",
   lastName: "Asante",
   indexNumber: `24${RUN}`.slice(0, 12),
+  /* Registered by the student, and expected to arrive as the title of
+     the project shell without an administrator typing it again. */
+  projectTopic: "Predicting exam outcomes from attendance records",
+};
+
+/* A second student on the same supervisor, so "schedule one meeting
+   with everyone I supervise" has more than one person to reach. */
+const student2 = {
+  email: `student2.${RUN}@test.opsts.edu`,
+  password: "Student-Pass-1",
+  firstName: "Ama",
+  lastName: "Mensah",
+  indexNumber: `25${RUN}`.slice(0, 12),
+  projectTopic: "A mobile triage assistant for rural clinics",
 };
 const supervisor = {
   email: `supervisor.${RUN}@test.opsts.edu`,
@@ -67,6 +81,37 @@ async function call(method, path, { token, body, form, expect = 200 } = {}) {
   return { status: res.status, data };
 }
 
+/**
+ * Like `call`, but for a response that is not JSON. Returns the body
+ * as text plus the two headers a download is judged by, so a CSV can
+ * be checked without pretending it parses as JSON.
+ */
+async function callRaw(method, path, { token, expect = 200 } = {}) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const res = await fetch(BASE + path, { method, headers });
+  /* Read as bytes, not res.text(): the WHATWG decode that text()
+     performs strips a leading BOM, which is exactly the byte a CSV
+     download has to be checked for. */
+  const bytes = Buffer.from(await res.arrayBuffer());
+  const text = bytes.toString("utf8");
+
+  if (res.status !== expect) {
+    console.error(`  ✗ ${method} ${path} → HTTP ${res.status} (expected ${expect})`);
+    console.error("   ", text.slice(0, 400));
+    process.exit(1);
+  }
+
+  return {
+    status: res.status,
+    bytes,
+    text,
+    contentType: res.headers.get("content-type") || "",
+    disposition: res.headers.get("content-disposition") || "",
+  };
+}
+
 async function main() {
   console.log(`Smoke test against ${BASE}\n`);
 
@@ -86,10 +131,30 @@ async function main() {
   ok("student registered as pending", reg1.data.user.status === "pending");
 
   await call("POST", "/auth/register", {
+    body: { role: "student", department: "Computer Science", ...student2 },
+    expect: 201,
+  });
+  ok("second student registered", true);
+
+  await call("POST", "/auth/register", {
     body: { role: "supervisor", department: "Computer Science", ...supervisor },
     expect: 201,
   });
   ok("supervisor registered", true);
+
+  await call("POST", "/auth/register", {
+    body: {
+      role: "student",
+      department: "Computer Science",
+      email: `no.topic.${RUN}@test.opsts.edu`,
+      password: "Student-Pass-1",
+      firstName: "Yaw",
+      lastName: "Owusu",
+      indexNumber: `26${RUN}`.slice(0, 12),
+    },
+    expect: 400,
+  });
+  ok("a student cannot register without a project topic", true);
 
   await call("POST", "/auth/login", {
     body: { email: student.email, password: student.password, role: "student" },
@@ -120,18 +185,37 @@ async function main() {
   console.log("\nAdmin: user management");
   const pending = await call("GET", "/users?status=pending", { token: adminToken });
   const studentRow = pending.data.users.find((u) => u.email === student.email);
+  const student2Row = pending.data.users.find((u) => u.email === student2.email);
   const supervisorRow = pending.data.users.find((u) => u.email === supervisor.email);
-  ok("pending list shows both registrations", Boolean(studentRow && supervisorRow));
+  ok(
+    "pending list shows all three registrations",
+    Boolean(studentRow && student2Row && supervisorRow)
+  );
+  ok(
+    "the approval queue shows the topic the student registered",
+    studentRow.projectTopic === student.projectTopic,
+    studentRow
+  );
 
   await call("PATCH", `/users/${studentRow.id}/approve`, { token: adminToken });
+  await call("PATCH", `/users/${student2Row.id}/approve`, { token: adminToken });
   await call("PATCH", `/users/${supervisorRow.id}/approve`, { token: adminToken });
-  ok("both accounts approved", true);
+  ok("all three accounts approved", true);
 
   const studentLogin = await call("POST", "/auth/login", {
     body: { email: student.email, password: student.password, role: "student" },
   });
   const studentToken = studentLogin.data.token;
   ok("approved student can sign in", Boolean(studentToken));
+
+  const freshProject = await call("GET", "/projects", { token: studentToken });
+  ok(
+    "the registered topic became the project, with no admin assignment",
+    freshProject.data.projects.length === 1 &&
+      freshProject.data.projects[0].title === student.projectTopic &&
+      freshProject.data.projects[0].topic === student.projectTopic,
+    freshProject.data.projects[0]
+  );
 
   const supLogin = await call("POST", "/auth/login", {
     body: { email: supervisor.email, password: supervisor.password, role: "supervisor" },
@@ -154,6 +238,12 @@ async function main() {
   });
   const projectId = assign.data.project.id;
   ok("supervisor assigned to student project", assign.data.project.supervisorId === supervisorRow.id);
+
+  await call("POST", "/projects/assign-supervisor", {
+    token: adminToken,
+    body: { studentId: student2Row.id, supervisorId: supervisorRow.id },
+  });
+  ok("second student assigned to the same supervisor", true);
 
   const deadline = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
   const today = new Date().toISOString().slice(0, 10);
@@ -248,10 +338,82 @@ async function main() {
     msAfter.data.milestones.find((m) => m.chapterId === "CH001").status === "Completed"
   );
 
+  /* Requirement: an approved chapter takes no further submissions. */
+  const closedForm = new FormData();
+  closedForm.append("chapterId", "CH001");
+  closedForm.append(
+    "file",
+    new Blob([`%PDF-1.4 second attempt ${RUN}\n`], { type: "application/pdf" }),
+    "chapter1_again.pdf"
+  );
+  await call("POST", "/submissions", { token: studentToken, form: closedForm, expect: 409 });
+  ok("an approved chapter refuses another submission", true);
+
+  await call("POST", `/submissions/${submissionId}/reopen`, {
+    token: studentToken,
+    body: {},
+    expect: 403,
+  });
+  ok("a student cannot reopen their own approved chapter", true);
+
+  const reopened = await call("POST", `/submissions/${submissionId}/reopen`, {
+    token: supToken,
+    body: { reason: "Please expand section 1.3." },
+  });
+  ok("supervisor reopened the chapter", Boolean(reopened.data.submission.reopenedAt));
+
+  await call("POST", `/submissions/${submissionId}/reopen`, {
+    token: supToken,
+    body: {},
+    expect: 409,
+  });
+  ok("reopening an already-open chapter is refused", true);
+
+  const revisionForm = new FormData();
+  revisionForm.append("chapterId", "CH001");
+  revisionForm.append(
+    "file",
+    new Blob([`%PDF-1.4 revised ${RUN}\n`], { type: "application/pdf" }),
+    "chapter1_v2.pdf"
+  );
+  const sub2 = await call("POST", "/submissions", {
+    token: studentToken,
+    form: revisionForm,
+    expect: 201,
+  });
+  ok("the reopened chapter accepts v2", sub2.data.submission.version === 2);
+
+  const afterRevision = await call("GET", "/projects", { token: studentToken });
+  ok(
+    "completion drops back to 0% while the revision is under review",
+    afterRevision.data.projects[0].completionPercent === 0,
+    afterRevision.data.projects[0]
+  );
+
+  await call("POST", "/feedback", {
+    token: supToken,
+    body: {
+      submissionId: sub2.data.submission.id,
+      comment: "Section 1.3 is much clearer now. Approved.",
+      rating: "Approved",
+    },
+    expect: 201,
+  });
+
+  const thirdForm = new FormData();
+  thirdForm.append("chapterId", "CH001");
+  thirdForm.append(
+    "file",
+    new Blob([`%PDF-1.4 third attempt ${RUN}\n`], { type: "application/pdf" }),
+    "chapter1_v3.pdf"
+  );
+  await call("POST", "/submissions", { token: studentToken, form: thirdForm, expect: 409 });
+  ok("approving the revision closes the chapter again", true);
+
   const stuFeedback = await call("GET", "/feedback", { token: studentToken });
   ok(
-    "student sees the feedback with supervisor name",
-    stuFeedback.data.feedback.length === 1 &&
+    "student sees both pieces of feedback with the supervisor name",
+    stuFeedback.data.feedback.length === 2 &&
       stuFeedback.data.feedback[0].supervisorName === "Efua Boateng"
   );
 
@@ -285,10 +447,46 @@ async function main() {
   });
   ok("supervisor scheduled a meeting with a link", Boolean(scheduled.data.meeting.link));
 
+  /* Requirement: one meeting for every student a supervisor has, not
+     one meeting each. The API takes a list, so "all" is the same
+     call with more ids. */
+  const cohort = await call("POST", "/meetings", {
+    token: supToken,
+    body: {
+      title: "Cohort progress check-in",
+      date: meetDate,
+      time: "16:00",
+      duration: "1 hour",
+      platform: "Google Meet",
+      link: "https://meet.google.com/all-cohort-abc",
+      studentIds: [studentRow.id, student2Row.id],
+    },
+    expect: 201,
+  });
+  ok(
+    "one meeting can invite every supervised student at once",
+    cohort.data.meeting.participants.length === 2,
+    cohort.data.meeting.participants
+  );
+  ok(
+    "the confirmation counts everyone it reached",
+    /All 2 students have been notified/.test(cohort.data.message),
+    cohort.data.message
+  );
+
+  const supStudents = await call("GET", `/users/supervisor/${supervisorRow.id}/students`, {
+    token: supToken,
+  });
+  ok(
+    "the supervisor's student list is what an \"all students\" choice expands to",
+    supStudents.data.students.length === 2,
+    supStudents.data.students.map((x) => x.name)
+  );
+
   const stuMeetings = await call("GET", "/meetings", { token: studentToken });
   ok(
-    "student sees both meetings",
-    stuMeetings.data.meetings.length === 2,
+    "student sees their request, their meeting and the cohort meeting",
+    stuMeetings.data.meetings.length === 3,
     stuMeetings.data.meetings.map((m) => m.title)
   );
 
@@ -329,8 +527,8 @@ async function main() {
   const workload = await call("GET", "/reports/workload", { token: adminToken });
   const supWorkload = workload.data.report.find((w) => w.id === supervisorRow.id);
   ok(
-    "workload report shows the supervisor with 1 student and 1 feedback",
-    supWorkload && supWorkload.studentsAssigned === 1 && supWorkload.feedbackGiven === 1,
+    "workload report shows the supervisor with both students and both reviews",
+    supWorkload && supWorkload.studentsAssigned === 2 && supWorkload.feedbackGiven === 2,
     supWorkload
   );
 
@@ -339,6 +537,52 @@ async function main() {
 
   await call("GET", "/reports/summary", { token: studentToken, expect: 403 });
   ok("reports are admin-only", true);
+
+  /* Requirement: the reports page can be downloaded, not just read. */
+  /* The exact filename, not a loose pattern: a sanitiser that ate a
+     character would still satisfy "looks roughly like a csv name". */
+  const stamp = new Date().toISOString().slice(0, 10);
+  const EXPECTED_FILENAMES = {
+    summary: "system-summary",
+    completion: "completion",
+    projects: "project-progress",
+    workload: "supervisor-workload",
+    deadlines: "deadlines",
+  };
+
+  for (const [type, label] of Object.entries(EXPECTED_FILENAMES)) {
+    const csv = await callRaw("GET", `/reports/export/${type}`, { token: adminToken });
+    ok(
+      `${type} report downloads as ${label}.csv`,
+      csv.contentType.includes("text/csv") &&
+        csv.disposition === `attachment; filename="opsts-${label}-${stamp}.csv"`,
+      { contentType: csv.contentType, disposition: csv.disposition }
+    );
+  }
+
+  const projectsCsv = await callRaw("GET", "/reports/export/projects", { token: adminToken });
+  const csvLines = projectsCsv.text.split("\r\n");
+  ok(
+    "the projects CSV opens with a BOM and a header row",
+    /* The BOM is what makes Excel read the file as UTF-8. */
+    csvLines[0].startsWith("\uFEFFStudent,Index number,Project title"),
+    csvLines[0].slice(0, 120)
+  );
+  ok(
+    "the projects CSV contains a row for the test student",
+    csvLines.some(
+      (line) =>
+        line.startsWith(`${student.firstName} ${student.lastName},`) &&
+        line.includes("AI-Assisted Timetabling System")
+    ),
+    csvLines.filter((line) => line.startsWith(student.firstName)).slice(0, 3)
+  );
+
+  await call("GET", "/reports/export/nonsense", { token: adminToken, expect: 400 });
+  ok("an unknown report name is refused", true);
+
+  await callRaw("GET", "/reports/export/projects", { token: supToken, expect: 403 });
+  ok("report downloads are admin-only too", true);
 
   /* ── password change invalidates old token ─ */
   console.log("\nSession security");
@@ -365,6 +609,7 @@ async function main() {
   /* ── cleanup ────────────────────────────── */
   console.log("\nCleanup");
   await call("DELETE", `/users/${studentRow.id}`, { token: adminToken });
+  await call("DELETE", `/users/${student2Row.id}`, { token: adminToken });
   await call("DELETE", `/users/${supervisorRow.id}`, { token: adminToken });
   ok("test accounts removed (cascade cleans project, files, feedback)", true);
 

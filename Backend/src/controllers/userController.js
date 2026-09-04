@@ -27,7 +27,18 @@ const { seedMilestones } = require("../services/progressService");
 const USER_COLUMNS = `
   id, first_name, last_name, email, role, status, department,
   index_number, staff_id, level, specialization, must_change_password,
-  created_at, last_login_at`;
+  proposed_topic, created_at, last_login_at`;
+
+/* A student names their topic when they register. Their project
+   shell is created later, at approval, so the topic has to travel
+   on the user row until there is a project to put it on. The
+   fallback keeps the old placeholder for accounts created before
+   the registration form asked. */
+const PROJECT_SHELL_SQL = `
+  INSERT INTO projects (student_id, title, topic)
+  VALUES ($1, COALESCE(NULLIF(btrim($2), ''), 'Untitled Project'), NULLIF(btrim($2), ''))
+  ON CONFLICT (student_id) DO NOTHING
+  RETURNING id`;
 
 /* ══════════════════════════════════════
    GET /api/users
@@ -167,13 +178,10 @@ const createUser = catchAsync(async (req, res) => {
        Assign Supervisors page has something to attach a supervisor to
        and the student's dashboard is not empty on first sign-in. */
     if (created.role === "student") {
-      const { rows: projectRows } = await client.query(
-        `INSERT INTO projects (student_id, title)
-         VALUES ($1, 'Untitled Project')
-         ON CONFLICT (student_id) DO NOTHING
-         RETURNING id`,
-        [created.id]
-      );
+      const { rows: projectRows } = await client.query(PROJECT_SHELL_SQL, [
+        created.id,
+        req.body.projectTopic || null,
+      ]);
       if (projectRows[0]) await seedMilestones(client, projectRows[0].id);
     }
 
@@ -267,8 +275,9 @@ const updateUser = catchAsync(async (req, res) => {
 
 /* ══════════════════════════════════════
    PATCH /api/users/:id/approve
-   Approving a student also gives them a project shell, so an admin
-   can assign a supervisor straight away without a second step.
+   Approving a student also gives them a project shell — titled with
+   the topic they registered — so an admin can assign a supervisor
+   straight away without a second step and without inventing a topic.
 ══════════════════════════════════════ */
 const approveUser = catchAsync(async (req, res) => {
   const targetId = req.params.id;
@@ -292,20 +301,21 @@ const approveUser = catchAsync(async (req, res) => {
     const approved = rows[0];
 
     if (approved.role === "student") {
-      const { rows: projectRows } = await client.query(
-        `INSERT INTO projects (student_id, title)
-         VALUES ($1, 'Untitled Project')
-         ON CONFLICT (student_id) DO NOTHING
-         RETURNING id`,
-        [approved.id]
-      );
+      const { rows: projectRows } = await client.query(PROJECT_SHELL_SQL, [
+        approved.id,
+        approved.proposed_topic,
+      ]);
       if (projectRows[0]) await seedMilestones(client, projectRows[0].id);
     }
 
     await notifications.notify(client, {
       userId: approved.id,
       type: "approval",
-      message: "Your account has been approved. Welcome to OPSTS!",
+      message:
+        "Your account has been approved. Welcome to OPSTS!" +
+        (approved.role === "student" && approved.proposed_topic
+          ? ` Your project has been created with the topic you registered: "${approved.proposed_topic}".`
+          : ""),
       link: "dashboard.html",
     });
 

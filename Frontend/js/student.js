@@ -179,6 +179,20 @@ async function initSubmissions(user) {
   var statusList = document.getElementById("chapterStatusList");
   var tbody      = document.getElementById("submissionHistoryTable");
 
+  /* Submissions arrive oldest-first, so a chapter's current state is
+     the last one carrying its id. */
+  function latestFor(subs, chapterId) {
+    var chSubs = subs.filter(function (s) { return s.chapterId === chapterId; });
+    return chSubs.length > 0 ? chSubs[chSubs.length - 1] : null;
+  }
+
+  /* Approved and not reopened means the API will refuse another
+     upload — the same rule it enforces, stated here so the form
+     never accepts a choice that is going to be rejected. */
+  function isClosed(latest) {
+    return Boolean(latest && latest.status === "Approved" && !latest.reopenedAt);
+  }
+
   function renderChapterStatus(subs) {
     if (!statusList) return;
     statusList.innerHTML = DB_CHAPTERS.map(function (ch) {
@@ -187,12 +201,40 @@ async function initSubmissions(user) {
       var versions = chSubs.length > 0
         ? chSubs.length + " version" + (chSubs.length > 1 ? "s" : "")
         : "Not submitted";
+      /* Approved says "done"; reopened says "done, but your
+         supervisor wants another version" — a different instruction,
+         so it cannot share the same badge. */
+      var note = isClosed(latest)
+        ? '<span class="ch-versions">Closed</span>'
+        : latest && latest.status === "Approved" && latest.reopenedAt
+        ? '<span class="ch-versions">Reopened for revision</span>'
+        : "";
       return '<div class="chapter-status-item">' +
         '<span class="ch-name">' + ch.label + " – " + ch.title + "</span>" +
         '<span class="ch-versions">' + versions + "</span>" +
+        note +
         (latest ? badge(latest.status) : badge("Pending")) +
         "</div>";
     }).join("");
+  }
+
+  function syncChapterOptions(subs) {
+    var select = document.getElementById("chapterSelect");
+    if (!select) return;
+
+    DB_CHAPTERS.forEach(function (ch) {
+      var option = select.querySelector('option[value="' + ch.id + '"]');
+      if (!option) return;
+      var closed = isClosed(latestFor(subs, ch.id));
+      option.disabled = closed;
+      option.textContent = ch.label + " – " + ch.title + (closed ? " (approved — closed)" : "");
+    });
+
+    /* A chapter approved while this page was open must not stay
+       selected, or the submit button aims at a disabled option. */
+    if (select.selectedIndex > -1 && select.options[select.selectedIndex].disabled) {
+      select.value = "";
+    }
   }
 
   function renderHistory(subs) {
@@ -226,6 +268,7 @@ async function initSubmissions(user) {
       var res  = await Api.get("/submissions");
       var subs = res.submissions || [];
       renderChapterStatus(subs);
+      syncChapterOptions(subs);
       renderHistory(subs);
     } catch (err) {
       apiErrorToast(err, "Could not load your submissions.");

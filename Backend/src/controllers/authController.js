@@ -29,7 +29,7 @@ const email = require("../services/email");
 const USER_COLUMNS = `
   id, first_name, last_name, email, role, status, department,
   index_number, staff_id, level, specialization, token_version,
-  must_change_password,
+  must_change_password, proposed_topic,
   created_at, last_login_at`;
 
 /* Hashing a throwaway string when no user matches keeps the response
@@ -55,11 +55,19 @@ const register = catchAsync(async (req, res) => {
   const indexNumber = role === "student" ? (req.body.indexNumber || "").trim() : null;
   const staffId = role === "supervisor" ? (req.body.staffId || "").trim() : null;
 
+  /* The student's own words for what they intend to work on. It
+     becomes the title and topic of the project shell the moment
+     the account is approved, so nobody has to re-enter it. */
+  const projectTopic = role === "student" ? (req.body.projectTopic || "").trim() : null;
+
   if (role === "student" && !indexNumber) {
     throw ApiError.badRequest("Your student index number is required.");
   }
   if (role === "supervisor" && !staffId) {
     throw ApiError.badRequest("Your staff ID is required.");
+  }
+  if (role === "student" && !projectTopic) {
+    throw ApiError.badRequest("Please describe your project topic.");
   }
 
   const passwordHash = await bcrypt.hash(password, config.auth.bcryptRounds);
@@ -68,8 +76,8 @@ const register = catchAsync(async (req, res) => {
     const { rows } = await client.query(
       `INSERT INTO users
          (first_name, last_name, email, password_hash, role, status,
-          department, index_number, staff_id, level)
-       VALUES ($1, $2, $3, $4, $5, 'pending', $6, $7, $8, $9)
+          department, index_number, staff_id, level, proposed_topic)
+       VALUES ($1, $2, $3, $4, $5, 'pending', $6, $7, $8, $9, $10)
        RETURNING ${USER_COLUMNS}`,
       [
         firstName,
@@ -81,6 +89,7 @@ const register = catchAsync(async (req, res) => {
         indexNumber || null,
         staffId || null,
         role === "student" ? "Level 400" : null,
+        projectTopic || null,
       ]
     );
 
@@ -88,7 +97,9 @@ const register = catchAsync(async (req, res) => {
 
     await notifications.notifyAdmins(client, {
       type: "system",
-      message: `${user.first_name} ${user.last_name} registered as a ${role} and is awaiting approval.`,
+      message:
+        `${user.first_name} ${user.last_name} registered as a ${role} and is awaiting approval.` +
+        (projectTopic ? ` Proposed topic: "${projectTopic}".` : ""),
       link: "users.html",
     });
 

@@ -8,7 +8,7 @@ const express = require("express");
 const controller = require("../controllers/submissionController");
 const { requireAuth, requireRole } = require("../middleware/auth");
 const { uploadChapter } = require("../middleware/upload");
-const { validate, rules, query } = require("../middleware/validate");
+const { validate, rules, body, query } = require("../middleware/validate");
 const { writeLimiter } = require("../middleware/rateLimit");
 
 const router = express.Router();
@@ -44,6 +44,21 @@ router.get(
   "/:id/download",
   [rules.uuidParam(), validate],
   controller.downloadSubmission
+);
+
+/* Reopening an approved chapter is the only way a student can submit
+   it again, so it is a supervisor's call — or an admin's. */
+router.post(
+  "/:id/reopen",
+  requireRole("supervisor", "admin"),
+  writeLimiter,
+  [
+    rules.uuidParam(),
+    body("reason").optional({ values: "falsy" }).trim().isLength({ max: 500 })
+      .withMessage("A reason must be 500 characters or fewer."),
+    validate,
+  ],
+  controller.reopenSubmission
 );
 
 router.delete("/:id", [rules.uuidParam(), validate], controller.deleteSubmission);

@@ -36,6 +36,13 @@ router.post(
       .withMessage("Staff ID must be between 3 and 30 characters.")
       .matches(/^[A-Za-z0-9/-]+$/)
       .withMessage("Staff ID may only contain letters, digits, hyphens and slashes."),
+    /* Students only — the controller requires it for that role and
+       ignores it for supervisors, so the chain stays optional here. */
+    body("projectTopic")
+      .optional({ values: "falsy" })
+      .trim()
+      .isLength({ min: 5, max: 200 })
+      .withMessage("Your project topic must be between 5 and 200 characters."),
     validate,
   ],
   controller.register

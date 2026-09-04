@@ -158,11 +158,11 @@ All routes are under `/api`. Authenticated routes expect
 | Auth | `POST /auth/register`, `/login`, `/forgot-password`, `/reset-password`, `/change-password`, `GET /auth/me`, `POST /auth/logout` |
 | Users | `GET/POST /users`, `GET/PUT/DELETE /users/:id`, `PATCH /users/:id/approve`, `GET /users/supervisor/:id/students` |
 | Projects | `GET/POST /projects`, `GET/PUT/DELETE /projects/:id`, `POST /projects/assign-supervisor`, `GET /projects/milestones/:projectId`, `PUT /projects/milestones/:id` |
-| Submissions | `GET/POST /submissions`, `GET/DELETE /submissions/:id`, `GET /submissions/:id/download` |
+| Submissions | `GET/POST /submissions`, `GET/DELETE /submissions/:id`, `GET /submissions/:id/download`, `POST /submissions/:id/reopen` |
 | Feedback | `GET/POST /feedback`, `GET /feedback/:id` |
 | Meetings | `GET/POST /meetings`, `POST /meetings/request`, `PUT/DELETE /meetings/:id` |
 | Notifications | `GET /notifications`, `GET /notifications/unread-count`, `PATCH /notifications/:id/read`, `PATCH /notifications/read-all`, `DELETE /notifications/:id` |
-| Reports | `GET /reports/summary`, `/completion`, `/projects`, `/workload`, `/deadlines` (admin only) |
+| Reports | `GET /reports/summary`, `/completion`, `/projects`, `/workload`, `/deadlines`, `GET /reports/export/:type` (all admin only) |
 | Reference | `GET /health`, `GET /chapters` (public) |
 
 Every response is JSON: `{ success: boolean, message?, ...payload }`. Errors

@@ -47,7 +47,7 @@
     <div class="page-content">
       <div class="page-header">
         <h1>Reports</h1>
-        <p>Generate and export system-wide reports.</p>
+        <p>Generate and export system-wide reports. Every section below can be downloaded as a CSV file.</p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
@@ -69,14 +69,24 @@
       </div>
 
       <div class="report-section" id="summarySection">
-        <h2><i class="fa-solid fa-clipboard-list"></i> System Summary</h2>
+        <div class="card-header">
+          <h2><i class="fa-solid fa-clipboard-list"></i> System Summary</h2>
+          <button type="button" class="btn btn-outline btn-sm" data-export="summary">
+            <i class="fa-solid fa-download"></i> Download CSV
+          </button>
+        </div>
         <div class="card">
           <div id="systemSummary"></div>
         </div>
       </div>
 
       <div class="report-section" id="completionSection">
-        <h2><i class="fa-solid fa-trophy"></i> Completion Report</h2>
+        <div class="card-header">
+          <h2><i class="fa-solid fa-trophy"></i> Completion Report</h2>
+          <button type="button" class="btn btn-outline btn-sm" data-export="completion">
+            <i class="fa-solid fa-download"></i> Download CSV
+          </button>
+        </div>
         <div class="card">
           <div class="table-wrap">
             <table>
@@ -94,7 +104,12 @@
       </div>
 
       <div class="report-section" id="projectsSection">
-        <h2><i class="fa-solid fa-folder-open"></i> Project Progress Overview</h2>
+        <div class="card-header">
+          <h2><i class="fa-solid fa-folder-open"></i> Project Progress Overview</h2>
+          <button type="button" class="btn btn-outline btn-sm" data-export="projects">
+            <i class="fa-solid fa-download"></i> Download CSV
+          </button>
+        </div>
         <div class="card">
           <div class="table-wrap">
             <table>
@@ -115,7 +130,12 @@
       </div>
 
       <div class="report-section" id="workloadSection">
-        <h2><i class="fa-solid fa-chalkboard-user"></i> Supervisor Workload</h2>
+        <div class="card-header">
+          <h2><i class="fa-solid fa-chalkboard-user"></i> Supervisor Workload</h2>
+          <button type="button" class="btn btn-outline btn-sm" data-export="workload">
+            <i class="fa-solid fa-download"></i> Download CSV
+          </button>
+        </div>
         <div class="card">
           <div class="table-wrap">
             <table>

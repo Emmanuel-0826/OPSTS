@@ -212,6 +212,25 @@
               </div>
             </div>
 
+            <!-- Students name their own topic here. It becomes the
+                 title of their project the moment an administrator
+                 approves the account, so nobody assigns one for them. -->
+            <div class="field" id="projectTopicField">
+              <label class="field-label field-required" for="projectTopic">Project topic</label>
+              <input
+                id="projectTopic"
+                name="projectTopic"
+                autocomplete="off"
+                maxlength="200"
+                placeholder="e.g. A machine learning approach to fraud detection in mobile money"
+                required
+              />
+              <p class="field-hint">
+                Your project is created with this topic when your account is
+                approved. Your supervisor can refine it with you later.
+              </p>
+            </div>
+
             <div class="field">
               <label class="field-label field-required" for="registerPassword">Password</label>
               <div class="password-field">

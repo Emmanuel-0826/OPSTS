@@ -62,6 +62,10 @@ function toUser(row) {
        (bootstrapped default admin, or an admin-created account). The
        portal uses it to prompt the owner to choose their own. */
     mustChangePassword: Boolean(row.must_change_password),
+    /* What a student typed as their project topic when registering.
+       Their project carries it once the account is approved; the
+       admin approval queue shows it before that happens. */
+    projectTopic: row.proposed_topic || null,
     createdAt: iso(row.created_at),
     lastLoginAt: iso(row.last_login_at),
   };
@@ -136,6 +140,11 @@ function toSubmission(row) {
     mimeType: row.mime_type,
     notes: row.notes || null,
     status: row.status,
+    /* Set only on an approved chapter a supervisor has deliberately
+       opened again. Both portals read it: the student's chapter
+       picker to know what it may offer, the supervisor's review
+       list to know it has already been reopened. */
+    reopenedAt: iso(row.reopened_at),
     submittedAt: iso(row.submitted_at),
   };
 }

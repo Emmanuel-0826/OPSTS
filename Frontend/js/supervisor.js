@@ -288,11 +288,31 @@ async function renderReviewList() {
     return;
   }
 
+  /* The highest version of a chapter is the one the submission rule
+     reads, so only that row can be reopened. */
+  function isLatestVersion(sub) {
+    return !reviewSubsCache.some(function (other) {
+      return String(other.studentId) === String(sub.studentId) &&
+        other.chapterId === sub.chapterId &&
+        Number(other.version) > Number(sub.version);
+    });
+  }
+
   listEl.innerHTML = items.map(function (sub) {
     var student = reviewStudentsCache.find(function (s) { return String(s.id) === String(sub.studentId); });
     var ch      = DB.getChapterById(sub.chapterId);
     var name    = student ? student.name : "Student";
     var init    = Utils.initials(name);
+
+    /* Approving a chapter closes it. This is the way back — the
+       student cannot submit again until it is pressed. */
+    var reopenBtn = "";
+    if (sub.status === "Approved" && isLatestVersion(sub)) {
+      reopenBtn = sub.reopenedAt
+        ? '<span class="rc-meta">Reopened — awaiting a revised version</span>'
+        : '<button class="btn btn-outline btn-sm" data-reopen-id="' + sub.id +
+          '"><i class="fa-solid fa-rotate-left"></i> Reopen for resubmission</button>';
+    }
 
     return '<div class="review-card">' +
       '<div class="review-card-header">' +
@@ -310,12 +330,35 @@ async function renderReviewList() {
       "</div>" +
       '<div class="feedback-actions">' +
       '<button class="btn btn-primary btn-sm" data-fb-id="' + sub.id + '"><i class="fa-solid fa-comments"></i> Give Feedback</button>' +
+      reopenBtn +
       "</div></div></div>";
   }).join("");
 
   listEl.querySelectorAll("button[data-dl-id]").forEach(function (btn) {
     btn.addEventListener("click", function () {
       downloadFile(Api.baseUrl + "/submissions/" + btn.dataset.dlId + "/download", btn.dataset.dlName);
+    });
+  });
+
+  listEl.querySelectorAll("button[data-reopen-id]").forEach(function (btn) {
+    btn.addEventListener("click", async function () {
+      var reason = window.prompt(
+        "Why are you reopening this chapter? (optional — the student sees this)"
+      );
+      /* Cancel is null; an empty string is "no reason given". */
+      if (reason === null) return;
+
+      btn.disabled = true;
+      try {
+        var res = await Api.post("/submissions/" + btn.dataset.reopenId + "/reopen", {
+          reason: reason.trim() || null,
+        });
+        showToast(res.message || "Chapter reopened.", "success", 4500);
+        await renderReviewList();
+      } catch (err) {
+        apiErrorToast(err, "Could not reopen that chapter.");
+        btn.disabled = false;
+      }
     });
   });
 
@@ -538,17 +581,47 @@ async function initSchedule(user) {
     });
   }
 
+  /* Held so "All my students" can expand to their ids on submit.
+     The <option> only ever carries the sentinel, never a list. */
+  var myStudentIds = [];
+
   var stuSelect = document.getElementById("mtgStudents");
   if (stuSelect) {
+    var allOption = document.getElementById("mtgAllStudentsOption");
     try {
       var res = await Api.get("/users/supervisor/" + user.id + "/students");
-      (res.students || []).forEach(function (s) {
+      var students = res.students || [];
+
+      /* "All" expands to the ids the API will actually accept — it
+         refuses a meeting containing a student who is not active, and
+         one suspended account would otherwise fail the whole booking
+         with nothing on screen explaining which student caused it. */
+      myStudentIds = students
+        .filter(function (s) { return s.status === "active"; })
+        .map(function (s) { return s.id; });
+
+      students.forEach(function (s) {
         var opt = document.createElement("option");
         opt.value = s.id;
         opt.textContent = s.name;
         stuSelect.appendChild(opt);
       });
-    } catch (err) { /* non-fatal */ }
+
+      /* Offered whenever there is anyone to invite. It was previously
+         hidden below two students, on the reasoning that "all" and
+         "that one student" are the same click — but a supervisor who
+         has one student today and four next term then finds the
+         option missing and concludes the feature does not exist. */
+      if (allOption) {
+        allOption.hidden = myStudentIds.length === 0;
+        allOption.textContent = "All my students (" + myStudentIds.length + ")";
+      }
+    } catch (err) {
+      /* The dropdown is the whole form: a supervisor staring at an
+         empty picker needs to know the list failed to load, not be
+         left to conclude they have no students. */
+      apiErrorToast(err, "Could not load your students. Please reload the page.");
+    }
   }
 
   var newBtn    = document.getElementById("newMeetingBtn");
@@ -576,15 +649,23 @@ async function initSchedule(user) {
         return;
       }
 
+      var studentIds = studentId === "__all__" ? myStudentIds.slice() : [studentId];
+      if (studentIds.length === 0) {
+        showToast("You have no students assigned yet.", "warning");
+        return;
+      }
+
       submitBtn.disabled = true;
       try {
-        await Api.post("/meetings", {
+        var created = await Api.post("/meetings", {
           title: title, date: date, time: time, duration: duration,
           platform: platform, link: link || null, notes: notes || null,
-          studentIds: [studentId],
+          studentIds: studentIds,
         });
         closeModal("scheduleMeetingModal");
-        showToast("Meeting scheduled successfully. Student notified.", "success", 4500);
+        /* The API counts the invitations it actually sent, so the
+           toast says "8 students" rather than guessing. */
+        showToast(created.message || "Meeting scheduled successfully.", "success", 4500);
         document.getElementById("scheduleMeetingForm").reset();
         await load();
       } catch (err) {

@@ -10,7 +10,7 @@
 const express = require("express");
 const controller = require("../controllers/reportController");
 const { requireAuth, requireRole } = require("../middleware/auth");
-const { validate, query } = require("../middleware/validate");
+const { validate, param, query } = require("../middleware/validate");
 
 const router = express.Router();
 
@@ -29,6 +29,21 @@ router.get(
     validate,
   ],
   controller.deadlines
+);
+
+/* Any report above, as a CSV download. The accepted names come from
+   the controller's own export table, so a report added there is
+   reachable here without a second list to keep in step. */
+router.get(
+  "/export/:type",
+  [
+    param("type").isIn(controller.EXPORTABLE)
+      .withMessage(`Choose one of: ${controller.EXPORTABLE.join(", ")}.`),
+    query("days").optional().isInt({ min: 1, max: 365 })
+      .withMessage("days must be between 1 and 365."),
+    validate,
+  ],
+  controller.exportReport
 );
 
 module.exports = router;

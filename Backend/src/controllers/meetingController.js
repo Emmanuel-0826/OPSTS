@@ -106,6 +106,11 @@ async function loadMeeting(executor, meetingId) {
 /* ══════════════════════════════════════
    POST /api/meetings   (supervisor, or admin)
    Body: title, date, time, duration, platform, link, notes, studentIds[]
+
+   studentIds is a list, not a single id, so one call covers both
+   "meet this student" and "meet everyone I supervise" — the second
+   is the same meeting with more participants, not a different kind
+   of thing.
 ══════════════════════════════════════ */
 const createMeeting = catchAsync(async (req, res) => {
   const { title, date, time, duration, platform, notes } = req.body;
@@ -205,11 +210,17 @@ const createMeeting = catchAsync(async (req, res) => {
       .catch(() => {});
   }
 
+  /* One meeting can now cover a supervisor's whole cohort, so the
+     confirmation says how many people it reached rather than
+     assuming there was exactly one. */
+  const invited =
+    studentRows.length === 1
+      ? "The student has been notified."
+      : `All ${studentRows.length} students have been notified.`;
+
   res.status(201).json({
     success: true,
-    message: warning
-      ? `Meeting scheduled. ${warning}`
-      : "Meeting scheduled. The student has been notified.",
+    message: warning ? `Meeting scheduled. ${warning}` : `Meeting scheduled. ${invited}`,
     warning: warning || undefined,
     meeting: toMeeting(meeting),
   });

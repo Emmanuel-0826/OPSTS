@@ -7,6 +7,15 @@
    static handler. The upload directory is not served by URL at all,
    so a file can only be reached by someone the query says is
    entitled to it: its author, their supervisor, or an admin.
+
+   An approved chapter is closed. Once a supervisor approves the
+   latest version of a chapter, that chapter accepts no further
+   uploads: a student who kept submitting after approval would keep
+   knocking their own completion percentage back down (progress is
+   derived from the *latest* version — see progressService), and the
+   supervisor's queue would fill with work nobody asked for. The
+   "unless otherwise" is POST /:id/reopen, a deliberate supervisor
+   action recorded on the approved row itself.
 ============================================================ */
 
 "use strict";
@@ -27,7 +36,7 @@ const { recalculateProject } = require("../services/progressService");
 const SUBMISSION_SELECT = `
   SELECT sub.id, sub.project_id, sub.student_id, sub.supervisor_id, sub.chapter_id,
          sub.version, sub.original_name, sub.stored_name, sub.file_size_bytes,
-         sub.mime_type, sub.notes, sub.status, sub.submitted_at,
+         sub.mime_type, sub.notes, sub.status, sub.submitted_at, sub.reopened_at,
          st.first_name AS student_first_name,
          st.last_name  AS student_last_name
     FROM submissions sub
@@ -128,13 +137,27 @@ const createSubmission = catchAsync(async (req, res) => {
         );
       }
 
-      const { rows: versionRows } = await client.query(
-        `SELECT COALESCE(MAX(version), 0) + 1 AS next_version
+      /* The chapter's current state is its highest version, and the
+         same row carries the reopen flag — so one read answers both
+         "may they submit?" and "what version is this?". */
+      const { rows: latestRows } = await client.query(
+        `SELECT version, status, reopened_at
            FROM submissions
-          WHERE student_id = $1 AND chapter_id = $2`,
+          WHERE student_id = $1 AND chapter_id = $2
+          ORDER BY version DESC
+          LIMIT 1`,
         [req.user.id, chapterId]
       );
-      const version = Number(versionRows[0].next_version);
+      const latest = latestRows[0] || null;
+
+      if (latest && latest.status === "Approved" && !latest.reopened_at) {
+        throw ApiError.conflict(
+          `${chapterLabel(chapterId)} has already been approved, so it is closed to new ` +
+            "submissions. Ask your supervisor to reopen it if you need to submit a revision."
+        );
+      }
+
+      const version = latest ? Number(latest.version) + 1 : 1;
 
       const { rows } = await client.query(
         `INSERT INTO submissions
@@ -305,6 +328,110 @@ const downloadSubmission = catchAsync(async (req, res) => {
 });
 
 /* ══════════════════════════════════════
+   POST /api/submissions/:id/reopen   (supervisor, or admin)
+
+   The "unless otherwise" on the approved-chapter rule. The flag
+   lives on the approved submission rather than on the project, so
+   reopening Chapter 2 says nothing about Chapter 3, and a chapter
+   approved a second time is closed again without any extra work.
+
+   The approval itself is left standing: the chapter stays Approved,
+   and completion only moves when a new version actually arrives.
+══════════════════════════════════════ */
+const reopenSubmission = catchAsync(async (req, res) => {
+  const submission = await loadSubmissionFor(req.params.id, req.user);
+
+  const result = await db.withTransaction(async (client) => {
+    /* Re-read under a lock: two supervisors clicking at once must
+       not both send the student a "reopened" notification. */
+    const { rows } = await client.query(
+      `SELECT id, student_id, chapter_id, version, status, reopened_at
+         FROM submissions
+        WHERE id = $1
+        FOR UPDATE`,
+      [submission.id]
+    );
+    const current = rows[0];
+    if (!current) throw ApiError.notFound("That submission no longer exists.");
+
+    if (current.status !== "Approved") {
+      throw ApiError.badRequest(
+        "That chapter is not closed — only an approved chapter needs reopening."
+      );
+    }
+    if (current.reopened_at) {
+      throw ApiError.conflict("That chapter is already open for resubmission.");
+    }
+
+    /* Reopening anything but the current version would leave the
+       chapter closed, because the constraint reads the latest row. */
+    const { rows: latestRows } = await client.query(
+      `SELECT version FROM submissions
+        WHERE student_id = $1 AND chapter_id = $2
+        ORDER BY version DESC LIMIT 1`,
+      [current.student_id, current.chapter_id]
+    );
+    if (Number(latestRows[0].version) !== Number(current.version)) {
+      throw ApiError.badRequest(
+        "A newer version of that chapter exists. Reopen the latest one instead."
+      );
+    }
+
+    await client.query(
+      "UPDATE submissions SET reopened_at = now(), reopened_by = $2 WHERE id = $1",
+      [current.id, req.user.id]
+    );
+
+    const label = chapterLabel(current.chapter_id);
+    const reviewerName = `${req.user.first_name} ${req.user.last_name}`;
+    const reason = (req.body.reason || "").trim().slice(0, 500);
+
+    await notifications.notify(client, {
+      userId: current.student_id,
+      type: "submission",
+      message:
+        `${reviewerName} has reopened ${label} for resubmission.` +
+        (reason ? ` Reason: ${reason}` : ""),
+      link: "submissions.html",
+    });
+
+    const { rows: full } = await client.query(`${SUBMISSION_SELECT} WHERE sub.id = $1`, [
+      current.id,
+    ]);
+
+    return { submission: full[0], label, reviewerName, reason };
+  });
+
+  const { rows: studentRows } = await db.query(
+    "SELECT first_name, email FROM users WHERE id = $1",
+    [submission.student_id]
+  );
+
+  if (studentRows[0] && studentRows[0].email) {
+    email
+      .activityAlert({
+        to: studentRows[0].email,
+        name: studentRows[0].first_name,
+        subject: `${result.label} reopened for resubmission`,
+        lines: [
+          `${result.reviewerName} has reopened ${result.label} so you can submit a revised version.`,
+          result.reason ? `Reason: ${result.reason}` : "",
+          "Your previous approval stands until the new version is reviewed.",
+        ].filter(Boolean),
+        ctaLabel: "Submit a revision",
+        ctaPath: "pages/Student/submissions.html",
+      })
+      .catch(() => {});
+  }
+
+  res.json({
+    success: true,
+    message: `${result.label} has been reopened. The student can now submit a revision.`,
+    submission: toSubmission(result.submission),
+  });
+});
+
+/* ══════════════════════════════════════
    DELETE /api/submissions/:id
    A student may withdraw their own submission while it is still
    under review; an admin may remove any. Once a supervisor has
@@ -339,5 +466,6 @@ module.exports = {
   createSubmission,
   getSubmission,
   downloadSubmission,
+  reopenSubmission,
   deleteSubmission,
 };

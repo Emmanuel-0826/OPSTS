@@ -1,23 +1,31 @@
 /* ============================================================
    src/controllers/reportController.js — Requirement 11
 
-   Four reports for the admin dashboard. Each is a single
+   Five reports for the admin dashboard. Each is a single
    aggregate query rather than rows fetched and counted in JS:
    the database is where counting belongs, and it keeps the
    reports page a fixed cost as the cohort grows.
+
+   Every report is fetched by a `fetch*` function and rendered by
+   two handlers — one answering JSON to the page, one answering a
+   CSV download. Deriving both from the same function is what stops
+   the exported file and the table on screen from drifting apart:
+   there is no second query to forget to update.
 ============================================================ */
 
 "use strict";
 
 const db = require("../config/db");
+const ApiError = require("../utils/ApiError");
 const catchAsync = require("../utils/catchAsync");
 const { dateOnly } = require("../utils/presenters");
+const { toCsv, sendCsv } = require("../utils/csv");
 
 /* ══════════════════════════════════════
    GET /api/reports/summary
    Feeds both the admin dashboard tiles and the reports page.
 ══════════════════════════════════════ */
-const summary = catchAsync(async (req, res) => {
+async function fetchSummary() {
   const { rows } = await db.query(`
     SELECT
       (SELECT count(*)::int FROM users WHERE role = 'student'    AND status = 'active') AS total_students,
@@ -38,25 +46,26 @@ const summary = catchAsync(async (req, res) => {
 
   const r = rows[0];
 
-  res.json({
-    success: true,
-    summary: {
-      totalStudents: r.total_students,
-      totalSupervisors: r.total_supervisors,
-      pendingApprovals: r.pending_approvals,
-      totalProjects: r.total_projects,
-      projectsInProgress: r.projects_in_progress,
-      projectsCompleted: r.projects_completed,
-      projectsPending: r.projects_pending,
-      projectsUnassigned: r.projects_unassigned,
-      totalSubmissions: r.total_submissions,
-      approvedSubmissions: r.approved_submissions,
-      pendingReviews: r.pending_reviews,
-      totalFeedbackGiven: r.total_feedback_given,
-      upcomingMeetings: r.upcoming_meetings,
-      averageCompletion: r.average_completion,
-    },
-  });
+  return {
+    totalStudents: r.total_students,
+    totalSupervisors: r.total_supervisors,
+    pendingApprovals: r.pending_approvals,
+    totalProjects: r.total_projects,
+    projectsInProgress: r.projects_in_progress,
+    projectsCompleted: r.projects_completed,
+    projectsPending: r.projects_pending,
+    projectsUnassigned: r.projects_unassigned,
+    totalSubmissions: r.total_submissions,
+    approvedSubmissions: r.approved_submissions,
+    pendingReviews: r.pending_reviews,
+    totalFeedbackGiven: r.total_feedback_given,
+    upcomingMeetings: r.upcoming_meetings,
+    averageCompletion: r.average_completion,
+  };
+}
+
+const summary = catchAsync(async (req, res) => {
+  res.json({ success: true, summary: await fetchSummary() });
 });
 
 /* ══════════════════════════════════════
@@ -65,7 +74,7 @@ const summary = catchAsync(async (req, res) => {
    when its count is zero, so the table does not change shape as
    the cohort moves through the year.
 ══════════════════════════════════════ */
-const completion = catchAsync(async (req, res) => {
+async function fetchCompletion() {
   const { rows } = await db.query(`
     WITH all_statuses(status) AS (
       VALUES ('Pending'), ('In Progress'), ('Completed')
@@ -89,14 +98,18 @@ const completion = catchAsync(async (req, res) => {
               END
   `);
 
-  res.json({ success: true, report: rows });
+  return rows;
+}
+
+const completion = catchAsync(async (req, res) => {
+  res.json({ success: true, report: await fetchCompletion() });
 });
 
 /* ══════════════════════════════════════
    GET /api/reports/projects
    Row per project: student, title, supervisor, progress, deadline.
 ══════════════════════════════════════ */
-const projects = catchAsync(async (req, res) => {
+async function fetchProjects() {
   const { rows } = await db.query(`
     SELECT p.id,
            s.first_name || ' ' || s.last_name AS student_name,
@@ -114,21 +127,22 @@ const projects = catchAsync(async (req, res) => {
      ORDER BY p.completion_percent DESC, s.first_name
   `);
 
-  res.json({
-    success: true,
-    report: rows.map((r) => ({
-      id: r.id,
-      studentName: r.student_name,
-      indexNumber: r.index_number,
-      title: r.title,
-      supervisorName: r.supervisor_name,
-      completionPercent: Number(r.completion_percent),
-      status: r.status,
-      startDate: dateOnly(r.start_date),
-      deadline: dateOnly(r.deadline),
-      submissionCount: r.submission_count,
-    })),
-  });
+  return rows.map((r) => ({
+    id: r.id,
+    studentName: r.student_name,
+    indexNumber: r.index_number,
+    title: r.title,
+    supervisorName: r.supervisor_name,
+    completionPercent: Number(r.completion_percent),
+    status: r.status,
+    startDate: dateOnly(r.start_date),
+    deadline: dateOnly(r.deadline),
+    submissionCount: r.submission_count,
+  }));
+}
+
+const projects = catchAsync(async (req, res) => {
+  res.json({ success: true, report: await fetchProjects() });
 });
 
 /* ══════════════════════════════════════
@@ -137,7 +151,7 @@ const projects = catchAsync(async (req, res) => {
    LEFT JOINs so a supervisor with no students still appears with
    zeros — that absence is exactly what the report exists to show.
 ══════════════════════════════════════ */
-const workload = catchAsync(async (req, res) => {
+async function fetchWorkload() {
   const { rows } = await db.query(`
     SELECT u.id,
            u.first_name || ' ' || u.last_name AS name,
@@ -155,19 +169,20 @@ const workload = catchAsync(async (req, res) => {
      ORDER BY students_assigned DESC, name
   `);
 
-  res.json({
-    success: true,
-    report: rows.map((r) => ({
-      id: r.id,
-      name: r.name,
-      department: r.department,
-      specialization: r.specialization,
-      studentsAssigned: r.students_assigned,
-      avgProgress: r.avg_progress,
-      pendingReviews: r.pending_reviews,
-      feedbackGiven: r.feedback_given,
-    })),
-  });
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    department: r.department,
+    specialization: r.specialization,
+    studentsAssigned: r.students_assigned,
+    avgProgress: r.avg_progress,
+    pendingReviews: r.pending_reviews,
+    feedbackGiven: r.feedback_given,
+  }));
+}
+
+const workload = catchAsync(async (req, res) => {
+  res.json({ success: true, report: await fetchWorkload() });
 });
 
 /* ══════════════════════════════════════
@@ -175,8 +190,8 @@ const workload = catchAsync(async (req, res) => {
    Projects due within ?days= (default 30), plus anything overdue.
    Backs the deadline reminders in requirement 8.
 ══════════════════════════════════════ */
-const deadlines = catchAsync(async (req, res) => {
-  const days = Math.min(Math.max(Number.parseInt(req.query.days, 10) || 30, 1), 365);
+async function fetchDeadlines(rawDays) {
+  const days = Math.min(Math.max(Number.parseInt(rawDays, 10) || 30, 1), 365);
 
   const { rows } = await db.query(
     `SELECT p.id,
@@ -196,20 +211,170 @@ const deadlines = catchAsync(async (req, res) => {
     [days]
   );
 
-  res.json({
-    success: true,
-    report: rows.map((r) => ({
-      id: r.id,
-      studentName: r.student_name,
-      studentEmail: r.student_email,
-      title: r.title,
-      deadline: dateOnly(r.deadline),
-      completionPercent: Number(r.completion_percent),
-      status: r.status,
-      daysRemaining: Number(r.days_remaining),
-      overdue: Number(r.days_remaining) < 0,
-    })),
-  });
+  return rows.map((r) => ({
+    id: r.id,
+    studentName: r.student_name,
+    studentEmail: r.student_email,
+    title: r.title,
+    deadline: dateOnly(r.deadline),
+    completionPercent: Number(r.completion_percent),
+    status: r.status,
+    daysRemaining: Number(r.days_remaining),
+    overdue: Number(r.days_remaining) < 0,
+  }));
+}
+
+const deadlines = catchAsync(async (req, res) => {
+  res.json({ success: true, report: await fetchDeadlines(req.query.days) });
 });
 
-module.exports = { summary, completion, projects, workload, deadlines };
+/* ══════════════════════════════════════
+   GET /api/reports/export/:type
+   The same five reports as a CSV download.
+
+   Each entry names the file, the column headings, and how one
+   record becomes one row — so adding a report to the page and
+   adding it to the exports is the same small piece of work, and a
+   report that cannot be exported is a missing entry rather than a
+   silently empty file.
+══════════════════════════════════════ */
+const EXPORTS = Object.freeze({
+  summary: {
+    label: "system-summary",
+    headers: ["Metric", "Value"],
+    /* The summary is one object, not a list. Reading down a column
+       of metric/value pairs is how a spreadsheet wants it. */
+    async rows() {
+      const s = await fetchSummary();
+      return [
+        ["Total students", s.totalStudents],
+        ["Total supervisors", s.totalSupervisors],
+        ["Pending approvals", s.pendingApprovals],
+        ["Total projects", s.totalProjects],
+        ["Projects in progress", s.projectsInProgress],
+        ["Projects completed", s.projectsCompleted],
+        ["Projects pending", s.projectsPending],
+        ["Projects without a supervisor", s.projectsUnassigned],
+        ["Total chapter submissions", s.totalSubmissions],
+        ["Approved submissions", s.approvedSubmissions],
+        ["Submissions awaiting review", s.pendingReviews],
+        ["Feedback entries given", s.totalFeedbackGiven],
+        ["Upcoming meetings", s.upcomingMeetings],
+        ["Average completion (%)", s.averageCompletion],
+      ];
+    },
+  },
+
+  completion: {
+    label: "completion",
+    headers: ["Status", "Projects", "Percentage"],
+    async rows() {
+      const report = await fetchCompletion();
+      return report.map((r) => [r.status, r.count, `${r.percent}%`]);
+    },
+  },
+
+  projects: {
+    label: "project-progress",
+    headers: [
+      "Student",
+      "Index number",
+      "Project title",
+      "Supervisor",
+      "Completion (%)",
+      "Status",
+      "Start date",
+      "Deadline",
+      "Submissions",
+    ],
+    async rows() {
+      const report = await fetchProjects();
+      return report.map((p) => [
+        p.studentName,
+        p.indexNumber,
+        p.title,
+        p.supervisorName,
+        p.completionPercent,
+        p.status,
+        p.startDate,
+        p.deadline,
+        p.submissionCount,
+      ]);
+    },
+  },
+
+  workload: {
+    label: "supervisor-workload",
+    headers: [
+      "Supervisor",
+      "Department",
+      "Specialization",
+      "Students assigned",
+      "Pending reviews",
+      "Average progress (%)",
+      "Feedback given",
+    ],
+    async rows() {
+      const report = await fetchWorkload();
+      return report.map((w) => [
+        w.name,
+        w.department,
+        w.specialization,
+        w.studentsAssigned,
+        w.pendingReviews,
+        w.avgProgress,
+        w.feedbackGiven,
+      ]);
+    },
+  },
+
+  deadlines: {
+    label: "deadlines",
+    headers: [
+      "Student",
+      "Email",
+      "Project title",
+      "Deadline",
+      "Days remaining",
+      "Overdue",
+      "Completion (%)",
+      "Status",
+    ],
+    async rows(req) {
+      const report = await fetchDeadlines(req.query.days);
+      return report.map((d) => [
+        d.studentName,
+        d.studentEmail,
+        d.title,
+        d.deadline,
+        d.daysRemaining,
+        d.overdue ? "Yes" : "No",
+        d.completionPercent,
+        d.status,
+      ]);
+    },
+  },
+});
+
+/** The names the route accepts, so the list lives in one place. */
+const EXPORTABLE = Object.freeze(Object.keys(EXPORTS));
+
+const exportReport = catchAsync(async (req, res) => {
+  const definition = EXPORTS[req.params.type];
+  if (!definition) {
+    throw ApiError.badRequest(
+      `There is no "${req.params.type}" report. Choose one of: ${EXPORTABLE.join(", ")}.`
+    );
+  }
+
+  const rows = await definition.rows(req);
+  const stamp = new Date().toISOString().slice(0, 10);
+
+  sendCsv(
+    res,
+    `opsts-${definition.label}-${stamp}.csv`,
+    toCsv(definition.headers, rows)
+  );
+});
+
+module.exports = { summary, completion, projects, workload, deadlines, exportReport, EXPORTABLE };

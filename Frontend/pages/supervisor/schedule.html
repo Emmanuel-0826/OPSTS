@@ -82,7 +82,16 @@
           <label for="mtgStudents">Select Students</label>
           <select id="mtgStudents" name="students" required>
             <option value="">Select student…</option>
+            <!-- Revealed and labelled with a count by supervisor.js once
+                 the student list loads. Hidden rather than disabled to
+                 start with: the count is part of the label, so an
+                 un-populated version of it would be misleading. -->
+            <option value="__all__" id="mtgAllStudentsOption" hidden>All my students</option>
           </select>
+          <p class="field-hint" id="mtgStudentsHint">
+            Choosing “All my students” invites everyone you supervise to the
+            same session, with one set of details.
+          </p>
         </div>
         <div class="form-row">
           <div class="form-group">

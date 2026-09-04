@@ -58,6 +58,11 @@ router.post(
       .withMessage("Staff ID is too long."),
     body("level").optional({ values: "falsy" }).trim().isLength({ max: 30 }),
     body("specialization").optional({ values: "falsy" }).trim().isLength({ max: 120 }),
+    /* Students register their own topic; an admin creating a student
+       by hand may supply the same thing, and it lands on the project
+       shell the same way. */
+    body("projectTopic").optional({ values: "falsy" }).trim().isLength({ max: 200 })
+      .withMessage("That project topic is too long."),
     validate,
   ],
   controller.createUser

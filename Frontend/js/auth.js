@@ -238,6 +238,7 @@ function initSignIn() {
 
   const indexField = document.getElementById("indexNumberField");
   const staffField = document.getElementById("staffIdField");
+  const topicField = document.getElementById("projectTopicField");
 
   const registerRoles = wireRadioGroup(document.getElementById("registerRoles"), (role) => {
     /* One identifier field or the other, never both — the API
@@ -248,6 +249,9 @@ function initSignIn() {
     staffField.hidden = isStudent;
     document.getElementById("indexNumber").required = isStudent;
     document.getElementById("staffId").required = !isStudent;
+    /* A supervisor has no project of their own to name. */
+    topicField.hidden = !isStudent;
+    document.getElementById("projectTopic").required = isStudent;
   });
 
   wirePasswordRule(
@@ -268,6 +272,7 @@ function initSignIn() {
     const password = document.getElementById("registerPassword");
     const indexNumber = document.getElementById("indexNumber");
     const staffId = document.getElementById("staffId");
+    const projectTopic = document.getElementById("projectTopic");
 
     let ok = true;
     if (!firstName.value.trim()) {
@@ -299,6 +304,17 @@ function initSignIn() {
       UI.fieldError(staffId, "Your staff ID is required.");
       ok = false;
     }
+    /* Same floor the API enforces, so a topic that is too short is
+       caught before the round trip. */
+    if (role === "student" && projectTopic.value.trim().length < 5) {
+      UI.fieldError(
+        projectTopic,
+        projectTopic.value.trim()
+          ? "Please describe your project topic in at least 5 characters."
+          : "Your project topic is required."
+      );
+      ok = false;
+    }
     if (!ok) return UI.focusFirstError(registerForm);
 
     const button = registerForm.querySelector("[type=submit]");
@@ -312,8 +328,12 @@ function initSignIn() {
       password: password.value,
       department: department.value,
     };
-    if (role === "student") body.indexNumber = indexNumber.value.trim();
-    else body.staffId = staffId.value.trim();
+    if (role === "student") {
+      body.indexNumber = indexNumber.value.trim();
+      body.projectTopic = projectTopic.value.trim();
+    } else {
+      body.staffId = staffId.value.trim();
+    }
 
     try {
       const data = await Api.post("/auth/register", body, { anonymous: true });
